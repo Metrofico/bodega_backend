@@ -1,11 +1,15 @@
 import graphene
 
 
+class User(graphene.ObjectType):
+    userName = graphene.String()
+
+
 class Mutation(graphene.AbstractType):
-    register = graphene.String()
+    register = User
 
     def resolve_register(self, info, **kwargs):
-        return "registrado"
+        return User(userName="holas")
 
     pass
 
