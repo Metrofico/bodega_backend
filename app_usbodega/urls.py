@@ -1,6 +1,6 @@
 from django.urls import path
 
-from app import controller
+from app_usbodega import controller
 
 urlpatterns = [
     path('', controller.init)

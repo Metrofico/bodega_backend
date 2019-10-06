@@ -1,20 +1,15 @@
 import graphene
 
-import app.schema
+from app_usbodega.Mutations import Mutation
+from app_usbodega.Querys import Query
 
 
-class Mutations(
-    app.schema.Mutation,
-    graphene.ObjectType,
-):
+class Mutations(Mutation, graphene.ObjectType):
     pass
 
 
-class Queries(
-    app.schema.Query,
-    graphene.ObjectType
-):
+class Querys(Query, graphene.ObjectType):
     pass
 
 
-schema = graphene.Schema(query=Queries, mutation=Mutations)
+schema = graphene.Schema(query=Querys, mutation=Mutations)
