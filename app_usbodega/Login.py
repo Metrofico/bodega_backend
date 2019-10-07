@@ -12,7 +12,7 @@ class Login(graphene.AbstractType):
 
     def resolve_user(self, info, login):
         try:
-            usuario = Usuario.objects.get(email=login.email)
+            usuario = Usuarios.objects.get(email=login.email)
             passwordu = login.password.encode("utf-8")
             print("Usuario: ", passwordu, " ", " bd: ", usuario.password.encode("utf-8"))
             if not bcrypt.checkpw(passwordu, usuario.password.encode("utf-8")):
