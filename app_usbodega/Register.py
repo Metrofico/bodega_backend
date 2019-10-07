@@ -4,7 +4,7 @@ from django.db import IntegrityError
 
 from . import Inputs
 from .ObjectsTypes import UsuarioType
-from .models import Usuario
+from .models import Usuarios
 
 
 class Register(graphene.Mutation):
@@ -20,7 +20,7 @@ class Register(graphene.Mutation):
             hashed_password = bcrypt.hashpw(passwordu, bcrypt.gensalt())
         except Exception:
             raise Exception("Invalid Error")
-        user = Usuario(nombre=registerinput.nombre, apellido=registerinput.apellido, email=registerinput.email,
+        user = Usuarios(nombre=registerinput.nombre, apellido=registerinput.apellido, email=registerinput.email,
                        password=str(hashed_password, "utf-8"))
         try:
             user.save()
