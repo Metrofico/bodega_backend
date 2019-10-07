@@ -1,8 +1,10 @@
+import bcrypt
 import graphene
 from django.db import IntegrityError
 
 from . import Inputs
-from .models import UsuarioType, Usuario
+from .ObjectsTypes import UsuarioType
+from .models import Usuario
 
 
 class Register(graphene.Mutation):
@@ -12,10 +14,16 @@ class Register(graphene.Mutation):
     user = graphene.Field(UsuarioType)
 
     def mutate(self, info, registerinput):
+
+        passwordu = registerinput.password.encode("utf-8")
+        try:
+            hashed_password = bcrypt.hashpw(passwordu, bcrypt.gensalt())
+        except Exception:
+            raise Exception("Invalid Error")
         user = Usuario(nombre=registerinput.nombre, apellido=registerinput.apellido, email=registerinput.email,
-                       password=registerinput.password)
+                       password=str(hashed_password, "utf-8"))
         try:
             user.save()
         except IntegrityError:
             raise Exception("La cuenta ya existe")
-        return Register(user=user)
+        return Register(user=UsuarioType(nombre=user.nombre, apellido=user.apellido, email=user.email))

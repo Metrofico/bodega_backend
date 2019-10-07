@@ -13,9 +13,10 @@ SECRET_KEY = 'y3!@$u+vp1m_@r3%52&+9io470d6p-h4jf#7&&q%+f)b=2#ihx'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 # Application definition
-
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.BCryptPasswordHasher'
+]
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
