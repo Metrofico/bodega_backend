@@ -9,6 +9,7 @@ from . import ObjectsTypes
 
 class Login(graphene.AbstractType):
     user = graphene.Field(ObjectsTypes.UsuarioType, login=Inputs.InputLoginUser())
+    get_notifications = graphene.List(ObjectsTypes.NotificacionType)
 
     def resolve_user(self, info, login):
         try:
