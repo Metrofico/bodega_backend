@@ -14,9 +14,11 @@ class Login(graphene.AbstractType):
         try:
             usuario = Usuarios.objects.get(email=login.email)
             passwordu = login.password.encode("utf-8")
-            print("Usuario: ", passwordu, " ", " bd: ", usuario.password.encode("utf-8"))
-            if not bcrypt.checkpw(passwordu, usuario.password.encode("utf-8")):
-                raise Exception("Identificacion incorrecta")
+            try:
+                if not bcrypt.checkpw(passwordu, usuario.password.encode("utf-8")):
+                    raise Exception("La clave ingresada es incorrecta")
+            except Exception:
+                raise Exception("La clave ingresada es incorrecta")
         except ObjectDoesNotExist:
-            raise Exception("El usuario no existe")
-        return ObjectsTypes.UsuarioType(nombre=usuario.nombre, apellido=usuario.apellido, email=usuario.email)
+            raise Exception("El usuario que escribio no existe")
+        return ObjectsTypes.UsuarioType(nombre=usuario.nombres, apellido=usuario.apellidos, email=usuario.email)

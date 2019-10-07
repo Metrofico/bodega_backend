@@ -1,4 +1,5 @@
 /.idea/
+.idea/
 venv/
 app_usbodega/__pycache__/
 app_usbodega/migrations/0001_initial.py
