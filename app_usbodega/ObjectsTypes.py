@@ -6,6 +6,7 @@ class UsuarioType(graphene.ObjectType):
     apellido = graphene.String()
     username = graphene.String()
     email = graphene.String()
+    token = graphene.String()
 
 
 class NotificacionType(graphene.ObjectType):

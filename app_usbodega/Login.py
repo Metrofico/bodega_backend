@@ -1,5 +1,9 @@
+import datetime
+
 import bcrypt
 import graphene
+import jwt
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from app_usbodega.models import *
@@ -13,7 +17,6 @@ class Login(graphene.AbstractType):
 
     def resolve_user(self, info, login):
         try:
-            print("usuario: " + login.username + " clave " + login.password)
             usuario = Usuarios.objects.get(username=login.username)
             passwordu = login.password.encode("utf-8")
             try:
@@ -23,8 +26,18 @@ class Login(graphene.AbstractType):
                 raise Exception("La clave ingresada es incorrecta")
         except ObjectDoesNotExist:
             raise Exception("El usuario que escribio no existe")
+
+        expiry = str(datetime.date.today() + datetime.timedelta(days=2))
+        print("expira: " + expiry)
+        print("Clave de acceso: " + settings.SECRET_KEY_JWT)
+        payload = {
+            'id': usuario.id,
+            'exp': expiry
+        }
+        token = str(jwt.encode(payload, str(settings.SECRET_KEY_JWT)), "utf8")
+        print(token)
         return ObjectsTypes.UsuarioType(nombre=usuario.nombres, username=usuario.username, apellido=usuario.apellidos,
-                                        email=usuario.email)
+                                        email=usuario.email, token=token)
 
     def resolve_get_notifications(self, info):
         data = Notificaciones.objects.all().filter(actived=True)
