@@ -4,6 +4,7 @@ import graphene
 class UsuarioType(graphene.ObjectType):
     nombre = graphene.String()
     apellido = graphene.String()
+    username = graphene.String()
     email = graphene.String()
 
 

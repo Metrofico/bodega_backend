@@ -13,7 +13,8 @@ class Login(graphene.AbstractType):
 
     def resolve_user(self, info, login):
         try:
-            usuario = Usuarios.objects.get(email=login.email)
+            print("usuario: " + login.username + " clave " + login.password)
+            usuario = Usuarios.objects.get(username=login.username)
             passwordu = login.password.encode("utf-8")
             try:
                 if not bcrypt.checkpw(passwordu, usuario.password.encode("utf-8")):
@@ -22,14 +23,14 @@ class Login(graphene.AbstractType):
                 raise Exception("La clave ingresada es incorrecta")
         except ObjectDoesNotExist:
             raise Exception("El usuario que escribio no existe")
-        return ObjectsTypes.UsuarioType(nombre=usuario.nombres, apellido=usuario.apellidos, email=usuario.email)
+        return ObjectsTypes.UsuarioType(nombre=usuario.nombres, username=usuario.username, apellido=usuario.apellidos,
+                                        email=usuario.email)
 
     def resolve_get_notifications(self, info):
-        data = notificaciones.objects.all().filter(actived=True)
+        data = Notificaciones.objects.all().filter(actived=True)
         retorno = []
         for item in data:
             bt_class = item.bt_cl.lower()
-            style_class = str
             if bt_class == "success":
                 style_class = "bg-success"
             elif bt_class == "danger":
@@ -40,7 +41,7 @@ class Login(graphene.AbstractType):
                 style_class = "bg-info"
             else:
                 style_class = "bg-secondary"
-            print(style_class)
+
             retorno.append(ObjectsTypes.NotificacionType(bt_class=style_class, title=item.title, date=item.date,
                                                          content=item.content))
 

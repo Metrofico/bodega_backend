@@ -7,6 +7,10 @@ from .ObjectsTypes import UsuarioType
 from .models import Usuarios
 
 
+def cleanstr(i):
+    return str(i).strip()
+
+
 class Register(graphene.Mutation):
     class Arguments:
         registerinput = Inputs.InputRegisterUser(required=True)
@@ -20,8 +24,10 @@ class Register(graphene.Mutation):
             hashed_password = bcrypt.hashpw(passwordu, bcrypt.gensalt())
         except Exception:
             raise Exception("La clave ingresada es incorrecta")
-        user = Usuarios(nombres=registerinput.nombre, apellidos=registerinput.apellido, email=registerinput.email,
-                       password=str(hashed_password, "utf-8"))
+        user = Usuarios(nombres=cleanstr(registerinput.nombre), apellidos=cleanstr(registerinput.apellido),
+                        username=cleanstr(registerinput.username),
+                        email=cleanstr(registerinput.email),
+                        password=str(hashed_password, "utf-8"))
         try:
             user.save()
         except IntegrityError:
