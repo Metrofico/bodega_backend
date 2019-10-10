@@ -39,7 +39,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -50,10 +50,11 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'bodega_backend.urls'
 
 CORS_ORIGIN_WHITELIST = (
-    'localhost:3000'
+    'localhost:3000',
+    'http://localhost:3000'
 )
 
-CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = (
     'x-requested-with',

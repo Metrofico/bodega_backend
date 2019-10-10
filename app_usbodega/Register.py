@@ -19,17 +19,18 @@ class Register(graphene.Mutation):
 
     def mutate(self, info, registerinput):
 
-        passwordu = registerinput.password.encode("utf-8")
+        passwordu = registerinput.clave.encode("utf-8")
         try:
             hashed_password = bcrypt.hashpw(passwordu, bcrypt.gensalt())
         except Exception:
             raise Exception("La clave ingresada es incorrecta")
-        user = Usuarios(nombres=cleanstr(registerinput.nombre), apellidos=cleanstr(registerinput.apellido),
-                        username=cleanstr(registerinput.username),
-                        email=cleanstr(registerinput.email),
+        user = Usuarios(nombres=cleanstr(registerinput.nombres), apellidos=cleanstr(registerinput.apellidos),
+                        username=cleanstr(registerinput.usuario),
+                        email=cleanstr(registerinput.correo),
                         password=str(hashed_password, "utf-8"))
         try:
             user.save()
         except IntegrityError:
             raise Exception("La cuenta ya existe")
-        return Register(user=UsuarioType(nombre=user.nombres, apellido=user.apellidos, email=user.email))
+        return Register(
+            user=UsuarioType(nombres=user.nombres, usuario=user.username, apellidos=user.apellidos, email=user.email))

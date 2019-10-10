@@ -16,6 +16,7 @@ class Login(graphene.AbstractType):
     get_notifications = graphene.List(ObjectsTypes.NotificacionType)
 
     def resolve_user(self, info, login):
+
         try:
             usuario = Usuarios.objects.get(username=login.username)
             passwordu = login.password.encode("utf-8")
@@ -28,15 +29,21 @@ class Login(graphene.AbstractType):
             raise Exception("El usuario que escribio no existe")
 
         expiry = str(datetime.date.today() + datetime.timedelta(days=2))
-        print("expira: " + expiry)
-        print("Clave de acceso: " + settings.SECRET_KEY_JWT)
         payload = {
             'id': usuario.id,
             'exp': expiry
         }
         token = str(jwt.encode(payload, str(settings.SECRET_KEY_JWT)), "utf8")
-        print(token)
-        return ObjectsTypes.UsuarioType(nombre=usuario.nombres, username=usuario.username, apellido=usuario.apellidos,
+        setattr(info.context, "middleware_cookies", [
+            {
+                'key': "oAtmp",
+                'value': token,
+                'httpOnly': True,
+                'secure': False,
+            }
+        ])
+        return ObjectsTypes.UsuarioType(nombres=usuario.nombres, usuario=usuario.username,
+                                        apellidos=usuario.apellidos,
                                         email=usuario.email, token=token)
 
     def resolve_get_notifications(self, info):
