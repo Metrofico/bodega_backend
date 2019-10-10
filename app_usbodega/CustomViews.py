@@ -9,6 +9,8 @@ class SentryGraphQLView(GraphQLView):
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() != "post":
             raise Exception("Exception Invalid")
+        cookies = request.COOKIES
+        setattr(request, 'cookies', cookies)
         result = super().dispatch(request, *args, **kwargs)
         if result.status_code == 200:
             try:
@@ -17,7 +19,7 @@ class SentryGraphQLView(GraphQLView):
                     print(cookie.get('key'))
                     result.set_cookie(cookie.get('key'), cookie.get('value'), max_age=31449600,
                                       httponly=cookie.get('httpOnly', False), secure=cookie.get('secure', False),
-                                      **kwargs)
+                                      samesite=cookie.get('SameSite', None))
             except:
                 pass
 

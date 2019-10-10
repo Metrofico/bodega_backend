@@ -1,3 +1,5 @@
+import uuid
+
 import bcrypt
 import graphene
 from django.db import IntegrityError
@@ -9,6 +11,25 @@ from .models import Usuarios
 
 def cleanstr(i):
     return str(i).strip()
+
+
+class Logout(graphene.Mutation):
+    result = graphene.Boolean()
+
+    def mutate(self, info):
+        cookies = getattr(info.context, 'cookies', None)
+        regenerate = str(uuid.uuid4()).replace("-", "") + str(uuid.uuid4()).replace("-", "")
+        if cookies is not None and "oAtmp" in cookies:
+            setattr(info.context, "middleware_cookies", [
+                {
+                    'key': "oAtmp",
+                    'value': regenerate,
+                    'httpOnly': True,
+                    'secure': False,
+                }
+            ])
+            return Logout(result=True)
+        return Logout(result=False)
 
 
 class Register(graphene.Mutation):
@@ -24,13 +45,16 @@ class Register(graphene.Mutation):
             hashed_password = bcrypt.hashpw(passwordu, bcrypt.gensalt())
         except Exception:
             raise Exception("La clave ingresada es incorrecta")
+
         user = Usuarios(nombres=cleanstr(registerinput.nombres), apellidos=cleanstr(registerinput.apellidos),
-                        username=cleanstr(registerinput.usuario),
+                        usuario=cleanstr(registerinput.usuario),
                         email=cleanstr(registerinput.correo),
                         password=str(hashed_password, "utf-8"))
+        print(user.apellidos, " ", user.usuario, " ", user.email)
         try:
             user.save()
-        except IntegrityError:
+        except IntegrityError as e:
+            print(e)
             raise Exception("La cuenta ya existe")
         return Register(
-            user=UsuarioType(nombres=user.nombres, usuario=user.username, apellidos=user.apellidos, email=user.email))
+            user=UsuarioType(nombres=user.nombres, usuario=user.usuario, apellidos=user.apellidos, email=user.email))

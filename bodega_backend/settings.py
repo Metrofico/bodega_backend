@@ -7,8 +7,7 @@ SECRET_KEY_JWT = '4d6704jf#d6p-h4jf#!@$'
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-]
+ALLOWED_HOSTS = ['*']
 # Application definition
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptPasswordHasher'
@@ -24,14 +23,10 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 GRAPHENE = {
-    'SCHEMA': 'bodega_backend.schema.schema',
-    'MIDDLEWARE': [
-        'graphql_jwt.middleware.JSONWebTokenMiddleware',
-    ],
+    'SCHEMA': 'bodega_backend.schema.schema'
 }
 
 AUTHENTICATION_BACKENDS = [
-    'graphql_jwt.backends.JSONWebTokenBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -51,7 +46,10 @@ ROOT_URLCONF = 'bodega_backend.urls'
 
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    '192.168.10.15:3000',
+    '192.168.10.16:3000',
+    '127.0.0.1:3000'
 )
 
 CORS_ALLOW_CREDENTIALS = True
