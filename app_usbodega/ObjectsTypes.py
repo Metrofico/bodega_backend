@@ -2,10 +2,11 @@ import graphene
 
 
 class UsuarioType(graphene.ObjectType):
-    nombre = graphene.String()
-    apellido = graphene.String()
-    email = graphene.String()
+    nombres = graphene.String()
+    apellidos = graphene.String()
     usuario = graphene.String()
+    email = graphene.String()
+    token = graphene.String()
 
 
 class NotificacionType(graphene.ObjectType):

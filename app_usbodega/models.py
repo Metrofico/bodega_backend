@@ -7,10 +7,11 @@ class Usuarios(models.Model):
     apellidos = models.CharField(max_length=200)
     usuario = models.CharField(max_length=200, unique=True, null=False, default='')
     email = models.EmailField(unique=True)
+    username = models.CharField(max_length=50, blank=True, unique=True)
     password = models.CharField(max_length=1024)
 
 
-class notificaciones(models.Model):
+class Notificaciones(models.Model):
     id = models.AutoField(primary_key=True)
     bt_cl = models.TextField(max_length=255)
     title = models.TextField(max_length=255)

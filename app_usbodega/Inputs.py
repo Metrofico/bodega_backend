@@ -2,12 +2,13 @@ import graphene
 
 
 class InputRegisterUser(graphene.InputObjectType):
-    nombre = graphene.String(required=True)
-    apellido = graphene.String(required=True)
-    email = graphene.String(required=True)
-    password = graphene.String(required=True)
+    nombres = graphene.String(required=True)
+    apellidos = graphene.String(required=True)
+    correo = graphene.String(required=True)
+    usuario = graphene.String(required=True)
+    clave = graphene.String(required=True)
 
 
 class InputLoginUser(graphene.InputObjectType):
-    email = graphene.String(required=True)
+    username = graphene.String(required=True)
     password = graphene.String(required=True)
