@@ -9,6 +9,11 @@ class InputRegisterUser(graphene.InputObjectType):
     clave = graphene.String(required=True)
 
 
+class InputAddProducto(graphene.InputObjectType):
+    ruc = graphene.String(required=True)
+    razonsocial = graphene.String(required=True)
+
+
 class InputLoginUser(graphene.InputObjectType):
     username = graphene.String(required=True)
     password = graphene.String(required=True)

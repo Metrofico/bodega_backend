@@ -4,6 +4,7 @@ import bcrypt
 import graphene
 from django.db import IntegrityError
 
+from app_usbodega import filters
 from . import Inputs
 from .ObjectsTypes import UsuarioType
 from .models import Usuarios
@@ -30,6 +31,18 @@ class Logout(graphene.Mutation):
             ])
             return Logout(result=True)
         return Logout(result=False)
+
+
+class AddProducto(graphene.Mutation):
+    class Arguments:
+        addproducto = Inputs.InputAddProducto(required=True)
+
+    ruc = graphene.String()
+
+    def mutate(self, info, addproducto):
+        ruc = addproducto.ruc
+        filters.strfilters(str=ruc, max_length=13, min_length=13)
+        return AddProducto(ruc=ruc)
 
 
 class Register(graphene.Mutation):

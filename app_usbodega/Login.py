@@ -36,7 +36,7 @@ class Login(graphene.AbstractType):
 
     def resolve_user(self, info, login):
         # current date and time
-        now = datetime.today() + timedelta(seconds=10)
+        now = datetime.today() + timedelta(days=7)
         timestamp = datetime.timestamp(now)
         cookies = getattr(info.context, 'cookies', None)
         if cookies is not None and "oAtmp" in cookies:
