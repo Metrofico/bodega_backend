@@ -20,3 +20,9 @@ class Notificaciones(models.Model):
     date = models.TextField(max_length=255)
     content = models.TextField(max_length=255)
     actived = models.BooleanField()
+
+
+class Categoria(models.Model):
+    id = models.AutoField(primary_key=True)
+    codigo = models.TextField(unique=True)
+    categoria = models.TextField(unique=True)
