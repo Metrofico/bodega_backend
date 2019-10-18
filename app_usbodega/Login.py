@@ -30,10 +30,9 @@ def is_valid_uuid(val):
         return None
 
 
-class Login(graphene.AbstractType):
+class Login(graphene.ObjectType):
     user = graphene.Field(ObjectsTypes.UsuarioType, login=Inputs.InputLoginUser())
     get_notifications = graphene.List(ObjectsTypes.NotificacionType)
-
     def resolve_user(self, info, login):
         # current date and time
         now = datetime.today() + timedelta(days=7)

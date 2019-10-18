@@ -45,11 +45,10 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'bodega_backend.urls'
 
 CORS_ORIGIN_WHITELIST = (
-    'localhost:3000',
     'http://localhost:3000',
-    '192.168.10.15:3000',
-    '192.168.10.16:3000',
-    '127.0.0.1:3000'
+    'http://192.168.10.15:3000',
+    'http://192.168.10.16:3000',
+    'http://127.0.0.1:3000'
 )
 
 CORS_ALLOW_CREDENTIALS = True

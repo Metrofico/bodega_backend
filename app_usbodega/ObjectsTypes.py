@@ -14,3 +14,8 @@ class NotificacionType(graphene.ObjectType):
     title = graphene.String()
     date = graphene.String()
     content = graphene.String()
+
+
+class AreasType(graphene.ObjectType):
+    id = graphene.Int()
+    area = graphene.String()
