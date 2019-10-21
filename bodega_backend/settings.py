@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'app_usbodega',
     'graphene_django',
     'corsheaders',
+    'tabula_py.tabula'
 ]
 
 GRAPHENE = {

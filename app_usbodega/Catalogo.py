@@ -1,8 +1,8 @@
 import graphene
-import tabula
 from graphene_file_upload.scalars import Upload
 
 from app_usbodega import filesutils
+from tabula_py import tabula
 
 
 class Catalogo(graphene.Mutation):
@@ -25,16 +25,17 @@ class Catalogo(graphene.Mutation):
             else:
                 name = namesplit[0]
             filesutils.allowextension(ext, "pdf", "txt", "csv")
-            print("File name: ", name)
-            print("Extension: ", ext)
-            print("Starting convertions!: ", name)
+            namepdf = name + ".pdf"
+            namecsv = name + ".csv"
+            print("Nombre de archivo: ", namepdf)
+            print("Iniciando conversion a csv!: ", namecsv)
             bytess = file.read()
-            out_file = open(name, "wb")  # open for [w]riting as [b]inary
+            out_file = open(namepdf, "wb")  # abrir [w]rite as [b]inary
             out_file.write(bytess)
             out_file.close()
-            csv = tabula.read_pdf(name, encoding="utf-8", silent=True,
+            csv = tabula.read_pdf(namepdf, encoding="utf-8", silent=False,
                                   java_options=["-Dfile.encoding=UTF8", "-Xmx4g"], pages='all')
-            csv.to_csv(str(name) + ".csv", encoding="utf-8", index=False)
-            print("Sucessful convertions!")
+            csv.to_csv(namecsv, encoding="utf-8", index=False)
+            print("Conversion completada!")
             success = True
         return Catalogo(success=success)
