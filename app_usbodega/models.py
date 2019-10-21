@@ -26,3 +26,7 @@ class Areas(models.Model):
     id = models.AutoField(primary_key=True)
     area = models.TextField(max_length=100)
 
+
+class Cargos(models.Model):
+    id = models.AutoField(primary_key=True)
+    cargo = models.TextField(max_length=100)

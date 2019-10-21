@@ -2,6 +2,7 @@ import graphene
 
 from .Register import Register, Logout, AddProducto
 from .Areas import AddArea, DeleteArea, UpdateArea
+from .Cargos import mutateCargo
 
 
 class Mutation(graphene.ObjectType):
@@ -11,3 +12,4 @@ class Mutation(graphene.ObjectType):
     addArea = AddArea.Field()
     deleteArea = DeleteArea.Field()
     updateArea = UpdateArea.Field()
+    mutateCargo = mutateCargo.Field()

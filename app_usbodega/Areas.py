@@ -37,7 +37,7 @@ class AddArea(graphene.Mutation):
     def mutate(self, info, area):
         strfilters(str=area, min_length=5,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para el area es de 5",
-                   max_length=255, errormessagemaxlength="!La cantidad de caracteres maxima para el area es de 255")
+                   max_length=100, errormessagemaxlength="!La cantidad de caracteres maxima para el area es de 100")
         if not exists_area(area):
             insert = Areas(area=str.upper(area))
             insert.save()
@@ -70,11 +70,11 @@ class UpdateArea(graphene.Mutation):
     def mutate(self, info, old_area, new_area):
         strfilters(str=old_area, min_length=5,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para el area anterior es de 5",
-                   max_length=255,
-                   errormessagemaxlength="!La cantidad de caracteres maxima para el area anterior es de 255")
+                   max_length=100,
+                   errormessagemaxlength="!La cantidad de caracteres maxima para el area anterior es de 100")
         strfilters(str=new_area, min_length=10,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para la nueva area es de 10",
-                   max_length=255,
+                   max_length=100,
                    errormessagemaxlength="!La cantidad de caracteres maxima para el area nueva es de 255")
 
         if exists_area(old_area):
