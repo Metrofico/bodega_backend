@@ -1,9 +1,9 @@
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
-from graphene_django.views import GraphQLView
+from graphene_file_upload.django import FileUploadGraphQLView
 
 
-class SentryGraphQLView(GraphQLView):
+class SentryGraphQLView(FileUploadGraphQLView):
 
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
@@ -16,7 +16,6 @@ class SentryGraphQLView(GraphQLView):
             try:
                 response_cookies = getattr(request, "middleware_cookies")
                 for cookie in response_cookies:
-                    print(cookie.get('key'))
                     result.set_cookie(cookie.get('key'), cookie.get('value'), max_age=31449600,
                                       httponly=cookie.get('httpOnly', False), secure=cookie.get('secure', False),
                                       samesite=cookie.get('SameSite', None))

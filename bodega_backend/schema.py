@@ -12,4 +12,4 @@ class Querys(Query, graphene.ObjectType):
     pass
 
 
-schema = graphene.Schema(query=Querys, mutation=Mutations,auto_camelcase=False)
+schema = graphene.Schema(query=Querys, mutation=Mutations, auto_camelcase=False)

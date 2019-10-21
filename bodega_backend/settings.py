@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'corsheaders',
 ]
+
 GRAPHENE = {
     'SCHEMA': 'bodega_backend.schema.schema'
 }
