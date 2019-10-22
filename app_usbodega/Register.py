@@ -4,7 +4,7 @@ import bcrypt
 import graphene
 from django.db import IntegrityError
 
-from app_usbodega import filters
+from app_usbodega.utils.GeneralDataValidation import strfilters
 from . import Inputs
 from .ObjectsTypes import UsuarioType
 from .models import Usuarios
@@ -17,6 +17,7 @@ def cleanstr(i):
 class Logout(graphene.Mutation):
     result = graphene.Boolean()
 
+    @staticmethod
     def mutate(self, info):
         cookies = getattr(info.context, 'cookies', None)
         regenerate = str(uuid.uuid4()).replace("-", "") + str(uuid.uuid4()).replace("-", "")
@@ -39,9 +40,10 @@ class AddProducto(graphene.Mutation):
 
     ruc = graphene.String()
 
+    @staticmethod
     def mutate(self, info, addproducto):
         ruc = addproducto.ruc
-        filters.strfilters(str=ruc, max_length=13, min_length=13)
+        strfilters(str=ruc, max_length=13, min_length=13)
         return AddProducto(ruc=ruc)
 
 
@@ -51,6 +53,7 @@ class Register(graphene.Mutation):
 
     user = graphene.Field(UsuarioType)
 
+    @staticmethod
     def mutate(self, info, registerinput):
 
         passwordu = registerinput.clave.encode("utf-8")

@@ -1,7 +1,7 @@
 import graphene
 from .models import Areas
 from .ObjectsTypes import AreasType
-from .filters import *
+from app_usbodega.utils.GeneralDataValidation import strfilters
 
 
 def exists_area(area):
@@ -13,6 +13,7 @@ class AreasQuery(graphene.ObjectType):
     get_areas = graphene.List(AreasType)
     search_area = graphene.List(AreasType, parameter=graphene.String())
 
+    @staticmethod
     def resolve_get_areas(self, info):
         data = Areas.objects.all()
         retorno = []
@@ -20,6 +21,7 @@ class AreasQuery(graphene.ObjectType):
             retorno.append(AreasType(id=item.id, area=item.area))
         return retorno
 
+    @staticmethod
     def resolve_search_area(self, info, parameter):
         data = Areas.objects.filter(area__startswith=str.upper(parameter))
         retorno = []

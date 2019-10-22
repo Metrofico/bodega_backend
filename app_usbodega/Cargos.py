@@ -1,5 +1,5 @@
 import graphene
-from .filters import *
+from app_usbodega.utils.GeneralDataValidation import strfilters
 from .models import Cargos
 from .ObjectsTypes import CargosType
 
@@ -16,26 +16,26 @@ def check_filters(cargo):
                errormessagemaxlength="!La cantidad de caracteres maxima para el/los cargo es de 100")
 
 
-class queriesCargo(graphene.ObjectType):
+class QueriesCargo(graphene.ObjectType):
     query_cargo = graphene.List(CargosType, qType=graphene.String(required=True),
                                 cargo=graphene.String(required=False))
 
+    @staticmethod
     def resolve_query_cargo(self, info, **kwargs):
         q_type = str.lower(kwargs["qType"])
         to_return = []
-        data = None
         if q_type == "filter":
             data = Cargos.objects.filter(cargo__startswith=str.upper(kwargs["cargo"]))
         elif q_type == "all":
             data = Cargos.objects.all()
         else:
-            raise Exception("Tipo de operacion invalida, las permitidas son: filter y all")
+            raise Exception("Tipo de operacion invalida, las permitidas son: 'filter' y 'all'")
         for item in data:
             to_return.append(CargosType(id=item.id, cargo=item.cargo))
         return to_return
 
 
-class mutateCargo(graphene.Mutation):
+class MutateCargo(graphene.Mutation):
     class Arguments:
         mType = graphene.String(required=True)
         cargo = graphene.String(required=True)
@@ -43,6 +43,7 @@ class mutateCargo(graphene.Mutation):
 
     response = graphene.Boolean()
 
+    @staticmethod
     def mutate(self, info, **kwargs):
         cargo = str.upper(kwargs["cargo"])
         m_type = kwargs["mType"]
@@ -71,6 +72,6 @@ class mutateCargo(graphene.Mutation):
             raise Exception("Tipo de operacion invalida, las permitidas son: create, update, delete")
 
         if exist:
-            return mutateCargo(response=True)
+            return MutateCargo(response=True)
         else:
             raise Exception("El cargo no existe")
