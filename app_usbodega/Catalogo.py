@@ -33,8 +33,8 @@ class Catalogo(graphene.Mutation):
             out_file = open(namepdf, "wb")  # abrir [w]rite as [b]inary
             out_file.write(bytess)
             out_file.close()
-            csv = tabula.read_pdf(namepdf, encoding="utf-8", silent=False,
-                                  java_options=["-Dfile.encoding=UTF8", "-Xmx4g"], pages='all')
+            csv = tabula.read_pdf(namepdf, encoding="utf-8", silent=True, pages='all',
+                                  java_options=["-Xms4000M", "-Xmx5024M"])
             csv.to_csv(namecsv, encoding="utf-8", index=False)
             print("Conversion completada!")
             success = True
