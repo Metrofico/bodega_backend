@@ -5,7 +5,7 @@ from .utils.GeneralDataValidation import verificar, get_tipo_documento, has_valu
 from .utils.Date import Date
 from .models import Areas, Cargos, Beneficiario
 from .ObjectsTypes import BeneficiarioType
-
+#dsad
 
 class QueriesBeneficiario(graphene.ObjectType):
     query_beneficiarios = graphene.List(BeneficiarioType, data=InputBeneficiarioQuery())
