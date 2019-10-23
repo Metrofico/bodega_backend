@@ -5,3 +5,15 @@
 /venv
 venv/
 venv
+./venv
+__pycache__/
+app_usbodega/__pycache__/
+app_usbodega/migrations/0001_initial.py
+app_usbodega/migrations/0002_auto_20191005_2129.py
+app_usbodega/migrations/0003_auto_20191007_2130.py
+app_usbodega/migrations/0004_usuarios_username.py
+app_usbodega/migrations/0005_auto_20191007_2217.py
+app_usbodega/migrations/0006_auto_20191007_2217.py
+app_usbodega/migrations/0007_auto_20191013_2137.py
+app_usbodega/migrations/__pycache__/
+bodega_backend/__pycache__/
