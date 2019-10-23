@@ -26,16 +26,16 @@ class Catalogo(graphene.Mutation):
                 name = namesplit[0]
             filesutils.allowextension(ext, "pdf", "txt", "csv")
             namepdf = name + ".pdf"
-            namecsv = name + ".csv"
+            namecsv = name + ".json"
             print("Nombre de archivo: ", namepdf)
-            print("Iniciando conversion a csv!: ", namecsv)
+            print("Iniciando conversion a json!: ", namecsv)
             bytess = file.read()
             out_file = open(namepdf, "wb")  # abrir [w]rite as [b]inary
             out_file.write(bytess)
             out_file.close()
             csv = tabula.read_pdf(namepdf, encoding="utf-8", silent=True, pages='all',
                                   java_options=["-Xms4000M", "-Xmx5024M"])
-            csv.to_csv(namecsv, encoding="utf-8", index=False)
+            csv.to_json(namecsv, encoding="utf-8", index=False)
             print("Conversion completada!")
             success = True
         return Catalogo(success=success)
