@@ -12,21 +12,18 @@ class QueriesBeneficiario(graphene.ObjectType):
 
     @staticmethod
     def resolve_query_beneficiarios(self, info, data):
-        qType = str.lower(data.qType).strip()
-        if qType == "all":
+        q_type = str.lower(data.qType).strip()
+        if q_type == "all":
             db_awnser = Beneficiario.objects.all()
-            pass
-        elif qType == "filter":
+        elif q_type == "filter":
             beneficiario = str(data.beneficiario).strip()
             if beneficiario == "":
                 raise Exception("¡El campo beneficiario esta vacio!")
             db_awnser = Beneficiario.objects.annotate(
                 search=SearchVector('nombres', 'apellido_paterno')).filter(
                 search__icontains=beneficiario)
-            pass
         else:
             raise Exception("¡Valor invalido para qType!, las operaciones permitidas son: 'filter' y 'all'")
-            pass
 
         to_return = []
         for item in db_awnser:

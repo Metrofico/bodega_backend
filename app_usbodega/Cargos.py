@@ -22,10 +22,11 @@ class QueriesCargo(graphene.ObjectType):
 
     @staticmethod
     def resolve_query_cargo(self, info, **kwargs):
-        q_type = str.lower(kwargs["qType"])
+        q_type = str.lower(kwargs["qType"]).strip()
         to_return = []
         if q_type == "filter":
-            data = Cargos.objects.filter(cargo__startswith=str.upper(kwargs["cargo"]))
+            cargo = kwargs["cargo"].strip();
+            data = Cargos.objects.filter(cargo__startswith=str.upper(cargo))
         elif q_type == "all":
             data = Cargos.objects.all()
         else:
@@ -45,13 +46,13 @@ class MutateCargo(graphene.Mutation):
 
     @staticmethod
     def mutate(self, info, **kwargs):
-        cargo = str.upper(kwargs["cargo"])
-        m_type = kwargs["mType"]
+        cargo = str.upper(kwargs["cargo"]).strip()
+        m_type = kwargs["mType"].strip()
         exist = True
         check_filters(cargo)
         operation = str.lower(m_type)
         if operation == "update":
-            old_cargo = str.upper(kwargs["old_cargo"])
+            old_cargo = str.upper(kwargs["old_cargo"]).strip()
             if exists_cargo(old_cargo):
                 check_filters(old_cargo)
                 Cargos.objects.filter(cargo=old_cargo).update(cargo=cargo)

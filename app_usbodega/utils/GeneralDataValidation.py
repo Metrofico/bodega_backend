@@ -23,9 +23,9 @@ def verificar(nro):
     l = len(nro)
     if l == 10 or l == 13:  # verificar la longitud correcta
         cp = int(nro[0:2])
-        if cp >= 1 and cp <= 22:  # verificar codigo de provincia
+        if 1 <= cp <= 22:  # verificar codigo de provincia
             tercer_dig = int(nro[2])
-            if tercer_dig >= 0 and tercer_dig < 6:  # numeros enter 0 y 6
+            if 0 <= tercer_dig < 6:  # numeros enter 0 y 6
                 if l == 10:
                     return __validar_ced_ruc(nro, 0)
                 elif l == 13:

@@ -23,6 +23,7 @@ class AreasQuery(graphene.ObjectType):
 
     @staticmethod
     def resolve_search_area(self, info, parameter):
+        parameter = parameter.strip()
         data = Areas.objects.filter(area__startswith=str.upper(parameter))
         retorno = []
         for item in data:
@@ -37,6 +38,7 @@ class AddArea(graphene.Mutation):
     response = graphene.Boolean()
 
     def mutate(self, info, area):
+        area = area.strip()
         strfilters(str=area, min_length=5,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para el area es de 5",
                    max_length=100, errormessagemaxlength="!La cantidad de caracteres maxima para el area es de 100")
@@ -55,6 +57,7 @@ class DeleteArea(graphene.Mutation):
     response = graphene.Boolean()
 
     def mutate(self, info, area):
+        area = area.strip()
         if exists_area(area):
             Areas.objects.filter(area=str.upper(area)).delete()
             return DeleteArea(response=True)
@@ -70,6 +73,8 @@ class UpdateArea(graphene.Mutation):
     response = graphene.Boolean()
 
     def mutate(self, info, old_area, new_area):
+        old_area = old_area.strip()
+        new_area = new_area.strip()
         strfilters(str=old_area, min_length=5,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para el area anterior es de 5",
                    max_length=100,
