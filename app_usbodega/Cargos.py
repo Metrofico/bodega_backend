@@ -1,12 +1,7 @@
 import graphene
-from app_usbodega.utils.GeneralDataValidation import strfilters
+from app_usbodega.utils.GeneralDataValidation import strfilters, exists_field
 from .models import Cargos
 from .ObjectsTypes import CargosType
-
-
-def exists_cargo(cargo):
-    data = Cargos.objects.filter(cargo=cargo)
-    return data.count() != 0
 
 
 def check_filters(cargo):
@@ -53,19 +48,19 @@ class MutateCargo(graphene.Mutation):
         operation = str.lower(m_type)
         if operation == "update":
             old_cargo = str.upper(kwargs["old_cargo"]).strip()
-            if exists_cargo(old_cargo):
+            if exists_field(model=Cargos, field="cargo", dato=old_cargo, upper_case=True):
                 check_filters(old_cargo)
                 Cargos.objects.filter(cargo=old_cargo).update(cargo=cargo)
             else:
                 print("NO Existe el cargo: " + str(old_cargo))
                 exist = False
         elif operation == "delete":
-            if exists_cargo(cargo):
+            if exists_field(model=Cargos, field="cargo", dato=cargo, upper_case=True):
                 Cargos.objects.filter(cargo=cargo).delete()
             else:
                 exist = False
         elif operation == "create":
-            if not exists_cargo(cargo):
+            if not exists_field(model=Cargos, field="cargo", dato=cargo, upper_case=True):
                 Cargos(cargo=cargo).save()
             else:
                 raise Exception("El cargo ya existe")

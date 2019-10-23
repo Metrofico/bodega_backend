@@ -1,12 +1,7 @@
 import graphene
 from .models import Areas
 from .ObjectsTypes import AreasType
-from app_usbodega.utils.GeneralDataValidation import strfilters
-
-
-def exists_area(area):
-    data = Areas.objects.filter(area=str.upper(area))
-    return data.count() != 0
+from app_usbodega.utils.GeneralDataValidation import strfilters, exists_field
 
 
 class AreasQuery(graphene.ObjectType):
@@ -42,7 +37,7 @@ class AddArea(graphene.Mutation):
         strfilters(str=area, min_length=5,
                    errormessageminlength="¡La cantidad de caracteres minima permitida para el area es de 5",
                    max_length=100, errormessagemaxlength="!La cantidad de caracteres maxima para el area es de 100")
-        if not exists_area(area):
+        if not exists_field(model=Areas, field="area", dato=area, upper_case=True):
             insert = Areas(area=str.upper(area))
             insert.save()
             return AddArea(response=True)
@@ -58,7 +53,7 @@ class DeleteArea(graphene.Mutation):
 
     def mutate(self, info, area):
         area = area.strip()
-        if exists_area(area):
+        if exists_field(model=Areas, field="area", dato=area, upper_case=True):
             Areas.objects.filter(area=str.upper(area)).delete()
             return DeleteArea(response=True)
         else:
@@ -84,7 +79,7 @@ class UpdateArea(graphene.Mutation):
                    max_length=100,
                    errormessagemaxlength="!La cantidad de caracteres maxima para el area nueva es de 255")
 
-        if exists_area(old_area):
+        if exists_field(model=Areas, field="area", dato=old_area, upper_case=True):
             Areas.objects.filter(area=str.upper(old_area)).update(area=str.upper(new_area))
             return UpdateArea(response=True)
         else:

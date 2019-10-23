@@ -32,8 +32,14 @@ class InputRegisterBeneficiario(graphene.InputObjectType):
 
 class InputUpdateBeneficiario(graphene.InputObjectType):
     target = graphene.Int(required=True)
-    field = graphene.String(required=True)
-    new_value = graphene.String(required=True)
+    tipo_doc = graphene.Int()
+    documento = graphene.String()
+    nombres = graphene.String()
+    apellido_paterno = graphene.String()
+    apellido_materno = graphene.String()
+    telefono = graphene.String()
+    area = graphene.Int()
+    cargo = graphene.Int()
 
 
 class InputBeneficiarioQuery(graphene.InputObjectType):

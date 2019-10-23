@@ -68,3 +68,17 @@ def has_value(value, term):
         return True
     else:
         raise Exception("¡El campo " + term + " esta vacio!")
+
+
+def get_tipo_documento(tipo_doc):
+    if tipo_doc > 2 or tipo_doc == 0:
+        raise Exception("Tipo de documento invalido, indices validos: 1 (Cédula), 2 (Pasaporte)")
+    else:
+        return "Cédula" if tipo_doc == 1 else "Pasaporte"
+
+
+def exists_field(model, field, dato, upper_case):
+    if upper_case:
+        dato = str.upper(dato)
+    data = model.objects.filter(**{field: dato})
+    return data.count() != 0
