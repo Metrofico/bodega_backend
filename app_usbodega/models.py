@@ -26,3 +26,17 @@ class Categoria(models.Model):
     id = models.AutoField(primary_key=True)
     codigo = models.TextField(unique=True)
     categoria = models.TextField(unique=True)
+
+
+class Catalogos(models.Model):
+    id = models.AutoField(primary_key=True)
+    nameFile = models.TextField(max_length=255)
+    file = models.FilePathField()
+    date_uploaded = models.IntegerField()
+
+
+class CurrentCatalogo(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    id_de_existencia = models.TextField(max_length=255)
+    descripcion = models.TextField(max_length=255)
+    item_presupuestario = models.TextField(max_length=255)

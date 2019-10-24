@@ -1,8 +1,104 @@
+import json
+import re
+from datetime import datetime
+
 import graphene
+from django.conf import settings
 from graphene_file_upload.scalars import Upload
 
 from app_usbodega import filesutils
 from tabula_py import tabula
+from .ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
+from .models import Catalogos, CurrentCatalogo
+
+ID_DE_EXISTENCIA = "ID EXISTENCIA"
+DESCRIPCION = "DESCRIPCION"
+
+
+class LastCatalogo(graphene.AbstractType):
+    lastcatalogo = graphene.Field(CatalogoType)
+    updatecurrentcatalogo = graphene.Field(CatalogoUpdateCurrent, catalogo=graphene.String(required=True))
+
+    def resolve_lastcatalogo(self, info):
+        if Catalogos.objects.all().count() == 0:
+            raise Exception("No hay datos para mostrar")
+        catalogo = Catalogos.objects.last()
+        csvpath = catalogo.file
+        csvpath = csvpath.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
+        csvpath = csvpath.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
+        input_file = open("." + csvpath, "r")
+        csvcontent = input_file.read()
+        return CatalogoType(payload=csvcontent)
+
+    def resolve_updatecurrentcatalogo(self, info, catalogo):
+        if Catalogos.objects.all().count() == 0:
+            raise Exception("No hay datos para importar")
+        try:
+            catalogo_object = Catalogos.objects.get(nameFile=catalogo + ".pdf")
+        except Exception:
+            raise Exception("No existe un catalogo con ese nombre")
+        csvpath = catalogo_object.file
+        csvpath = csvpath.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
+        csvpath = csvpath.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
+        print(csvpath)
+        input_file = open("." + csvpath, "r")
+        csvcontent = input_file.read()
+        processjson(csvcontent)
+        return CatalogoUpdateCurrent(success=csvcontent)
+
+
+def replace_last_word(text, word):
+    spliter = str(text).split(" ")
+    index = len(spliter)  # empieza con 1
+    lastword = str(spliter[len(spliter) - 1]).replace(word, "")
+    text = spliter[:index - 1]
+    textappend = ""
+    for word in text:
+        textappend = textappend + " " + str(word)
+    textappend = textappend + " " + lastword
+    textappend = str(textappend).strip()
+    return textappend
+
+
+def processjson(jsoncontent):
+    datas = json.loads(jsoncontent)
+    count = 0
+    total = len(datas)
+    print("Iniciando proceso de registro de catalogo: " + str(total))
+    for element in datas:
+        if count is 0:
+            count = count + 1
+            continue
+
+        id_existencia = str(element["ID EXISTENCIA"])
+        descripcion = str(element["Unnamed: 1"])
+
+        # 2901000029000176
+        # 1302000013001109
+        # 902000009000032
+        # 1801000018001623
+        # 1801000018001405
+
+        item_presu = str(element["LOTE"])
+        umedida = str(element["U. MEDIDA"])
+        caducidad = str(element["CADUCIDAD"])
+        if item_presu is "N":
+            item_presu = str(element["ITEM PRESUPUESTARIO"])
+        if "-" in umedida:
+            item_presu = str(umedida)
+        if "-" in caducidad:
+            item_presu = caducidad
+        re.sub("\s\s+", " ", descripcion)
+        id_existencia = id_existencia if len(id_existencia) >= 16 else "0" + id_existencia
+        descripcion = replace_last_word(descripcion, "UNIDAD")
+        current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
+                                           item_presupuestario=item_presu)
+        current_catalogo.save()
+        print("Procesando elemento de catalogo " + str(count) + "/" + str(total))
+        count = count + 1
+
+    print("Cátalogo ha sido procesado correctamente")
+    pass
 
 
 class Catalogo(graphene.Mutation):
@@ -24,18 +120,29 @@ class Catalogo(graphene.Mutation):
                 name = name
             else:
                 name = namesplit[0]
-            filesutils.allowextension(ext, "pdf", "txt", "csv")
-            namepdf = name + ".pdf"
-            namecsv = name + ".json"
+
+            now = datetime.now()
+            date = datetime.timestamp(now)
+            namepdf = name + str(date) + ".pdf"
+            namejson = name + str(date) + ".json"
             print("Nombre de archivo: ", namepdf)
-            print("Iniciando conversion a json!: ", namecsv)
+            print("Iniciando conversion a json!: ", namejson)
+            filesutils.allowextension(ext, "pdf")
+            dbfiles_out_csv = "./" + settings.DB_FILES_STATIC + "/" + settings.BODEGA_FOLDER + "/" + namejson
+            dbfiles_out_pdf = "./" + settings.DB_FILES_STATIC + "/" + settings.BODEGA_FOLDER + "/" + namepdf
+            dbfiles_out_replazable = "./" + "{DB_FILES_STATIC}" + "/{BODEGA_FOLDER}/" + namejson
             bytess = file.read()
-            out_file = open(namepdf, "wb")  # abrir [w]rite as [b]inary
+            out_file = open(dbfiles_out_pdf, "wb")  # archivo [w]rite(escribir) como [b]inary(binario)
             out_file.write(bytess)
             out_file.close()
-            csv = tabula.read_pdf(namepdf, encoding="utf-8", silent=True, pages='all',
-                                  java_options=["-Xms4000M", "-Xmx5024M"])
-            csv.to_json(namecsv, encoding="utf-8", index=False)
+            csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
+                                  java_options=["-Xms3000M", "-Xmx3024M"])
+            csv.to_json(dbfiles_out_csv, orient="records", index=True)
+            # input_file = open(dbfiles_out_csv, "r")
+            # csvcontent = input_file.read()
+            # processjson(csvcontent)
+            catalogo = Catalogos(nameFile=namepdf, file=dbfiles_out_replazable[1:], date_uploaded=date)
+            catalogo.save()
             print("Conversion completada!")
             success = True
         return Catalogo(success=success)

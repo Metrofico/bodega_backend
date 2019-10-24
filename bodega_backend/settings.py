@@ -4,7 +4,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'y3!@$u+vp1m_@r3%52&+9io470d6p-h4jf#7&&q%+f)b=2#ihx'
 SECRET_KEY_JWT = '4d6704jf#d6p-h4jf#!@$'
-
+DB_FILES_STATIC = "db_otros_files"
+BODEGA_FOLDER = "otra_bodega"
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
