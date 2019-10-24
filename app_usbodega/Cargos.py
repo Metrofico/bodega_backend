@@ -2,6 +2,7 @@ import graphene
 from app_usbodega.utils.GeneralDataValidation import strfilters, exists_field
 from .models import Cargos
 from .ObjectsTypes import CargosType
+from .Inputs import InputRegisterCargo, InputUpdateCargo, InputDeleteCargo
 
 
 def check_filters(cargo):
@@ -34,32 +35,48 @@ class QueriesCargo(graphene.ObjectType):
 class MutateCargo(graphene.Mutation):
     class Arguments:
         mType = graphene.String(required=True)
-        cargo = graphene.String(required=True)
-        old_cargo = graphene.String()
+        update = InputUpdateCargo()
+        create = InputRegisterCargo()
+        delete = InputDeleteCargo()
 
     response = graphene.Boolean()
 
     @staticmethod
     def mutate(self, info, **kwargs):
-        cargo = str.upper(kwargs["cargo"]).strip()
         m_type = kwargs["mType"].strip()
         exist = True
-        check_filters(cargo)
         operation = str.lower(m_type)
         if operation == "update":
-            old_cargo = str.upper(kwargs["old_cargo"]).strip()
-            if exists_field(model=Cargos, field="cargo", dato=old_cargo, upper_case=True):
-                check_filters(old_cargo)
-                Cargos.objects.filter(cargo=old_cargo).update(cargo=cargo)
+            try:
+                update = kwargs["update"]
+            except Exception:
+                raise Exception("!Debe incluir el argumento 'update' , para llevar a cabo esta operación!")
+            target = update.target
+            if exists_field(model=Cargos, field="id", dato=target, upper_case=False):
+                cargo = update.cargo
+                check_filters(cargo)
+                Cargos.objects.filter(id=target).update(cargo=cargo)
             else:
-                print("NO Existe el cargo: " + str(old_cargo))
                 exist = False
         elif operation == "delete":
-            if exists_field(model=Cargos, field="cargo", dato=cargo, upper_case=True):
-                Cargos.objects.filter(cargo=cargo).delete()
+            try:
+                delete = kwargs["delete"]
+            except Exception:
+                raise Exception("!Debe incluir el argumento 'delete' , para llevar a cabo esta operación!")
+            target = delete.target
+
+            if exists_field(model=Cargos, field="id", dato=target, upper_case=False):
+                Cargos.objects.filter(id=target).delete()
             else:
                 exist = False
+
         elif operation == "create":
+            try:
+                create = kwargs["create"]
+            except Exception:
+                raise Exception("!Debe incluir el argumento 'create' , para llevar a cabo esta operación!")
+            cargo = str.upper(create.cargo)
+            check_filters(cargo)
             if not exists_field(model=Cargos, field="cargo", dato=cargo, upper_case=True):
                 Cargos(cargo=cargo).save()
             else:
@@ -70,4 +87,4 @@ class MutateCargo(graphene.Mutation):
         if exist:
             return MutateCargo(response=True)
         else:
-            raise Exception("El cargo no existe")
+            raise Exception("No existe el cargo")

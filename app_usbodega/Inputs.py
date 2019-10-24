@@ -45,3 +45,16 @@ class InputUpdateBeneficiario(graphene.InputObjectType):
 class InputBeneficiarioQuery(graphene.InputObjectType):
     qType = graphene.String(required=True)
     beneficiario = graphene.String()
+
+
+class InputRegisterCargo(graphene.InputObjectType):
+    cargo = graphene.String(required=True)
+
+
+class InputUpdateCargo(graphene.InputObjectType):
+    target = graphene.Int(required=True)
+    cargo = graphene.String(required=True)
+
+
+class InputDeleteCargo(graphene.InputObjectType):
+    target = graphene.Int(required=True)

@@ -5,7 +5,7 @@ from .utils.GeneralDataValidation import verificar, get_tipo_documento, has_valu
 from .utils.Date import Date
 from .models import Areas, Cargos, Beneficiario
 from .ObjectsTypes import BeneficiarioType
-#dsad
+
 
 class QueriesBeneficiario(graphene.ObjectType):
     query_beneficiarios = graphene.List(BeneficiarioType, data=InputBeneficiarioQuery())
@@ -47,9 +47,12 @@ class MutateBeneficiario(graphene.Mutation):
 
     @staticmethod
     def mutate(self, info, mType, **kwargs):
-        mType = str.lower(mType)
+        mType = str.lower(mType).strip()
         if mType == "create":
-            create = kwargs["create"]
+            try:
+                create = kwargs["create"]
+            except Exception:
+                raise Exception("!Debe incluir el argumento 'create' , para llevar a cabo esta operación!")
             tipo_doc = create.tipo_doc
             documento = create.documento.strip()
             nombres = create.nombres.strip()
@@ -89,7 +92,10 @@ class MutateBeneficiario(graphene.Mutation):
                 raise Exception("El número de documento es invalido")
         elif mType == "update":
             vals = {}
-            update = kwargs["update"]
+            try:
+                update = kwargs["update"]
+            except Exception:
+                raise Exception("!Debe incluir el argumento 'update' , para llevar a cabo esta operación!")
             target = update.target
             if not exists_field(model=Beneficiario, field="id", dato=target, upper_case=False):
                 raise Exception("¡El beneficiario indicado no existe!")
@@ -148,9 +154,7 @@ class MutateBeneficiario(graphene.Mutation):
             try:
                 target = kwargs["target"]
             except Exception:
-                raise Exception(
-                    "La operacion 'delete' requiere el envio del id del beneficiario en el parametro 'target' de la "
-                    "query")
+                raise Exception("!Debe incluir el argumento 'target' , para llevar a cabo esta operación!")
             if not exists_field(Beneficiario, "id", target, False):
                 raise Exception("!El beneficiario indicado no existe!")
             Beneficiario.objects.filter(id=target).delete()
