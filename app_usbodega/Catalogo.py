@@ -79,6 +79,8 @@ def processjson(jsoncontent):
         # 1801000018001623
         # 1801000018001405
 
+        # BUSCAR Y CORREGIR ESE PROBLEMA
+        # 1302000013003748
         item_presu = str(element["LOTE"])
         umedida = str(element["U. MEDIDA"])
         caducidad = str(element["CADUCIDAD"])
