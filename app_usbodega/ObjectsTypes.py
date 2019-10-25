@@ -17,6 +17,10 @@ class CatalogoUpdateCurrent(graphene.ObjectType):
     success = graphene.String()
 
 
+class CatalogoClearCurrent(graphene.ObjectType):
+    success = graphene.String()
+
+
 class NotificacionType(graphene.ObjectType):
     bt_class = graphene.String()
     title = graphene.String()

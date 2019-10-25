@@ -10,7 +10,7 @@ from graphene_file_upload.scalars import Upload
 
 from app_usbodega import filesutils
 from tabula_py import tabula
-from .ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
+from .ObjectsTypes import CatalogoType, CatalogoUpdateCurrent, CatalogoClearCurrent
 from .models import Catalogos, CurrentCatalogo
 
 ID_DE_EXISTENCIA = "ID EXISTENCIA"
@@ -20,6 +20,7 @@ DESCRIPCION = "DESCRIPCION"
 class LastCatalogo(graphene.AbstractType):
     lastcatalogo = graphene.Field(CatalogoType)
     updatecurrentcatalogo = graphene.Field(CatalogoUpdateCurrent, catalogo=graphene.String(required=True))
+    clearcurrentcatalogo = graphene.Field(CatalogoUpdateCurrent)
 
     def resolve_lastcatalogo(self, info):
         if Catalogos.objects.all().count() == 0:
@@ -31,6 +32,10 @@ class LastCatalogo(graphene.AbstractType):
         input_file = open("." + csvpath, "r")
         csvcontent = input_file.read()
         return CatalogoType(payload=csvcontent)
+
+    def resolve_clearcurrentcatalogo(self, info):
+        reset_sql_current_catalogo()
+        return CatalogoClearCurrent(success="ok")
 
     def resolve_updatecurrentcatalogo(self, info, catalogo):
         if Catalogos.objects.all().count() == 0:
@@ -59,6 +64,27 @@ def replace_last_word(text, word):
         textappend = textappend + " " + str(word)
     textappend = textappend + " " + lastword
     textappend = str(textappend).strip()
+    return textappend
+
+
+def replace_last_two_words(text):
+    words = ["UNIDAD", "N"]
+    spliter = str(text).split(" ")
+    index = len(spliter)  # empieza con 1
+    if index > 1:
+        antepenultima = str(spliter[len(spliter) - 2])
+        lastword = str(spliter[len(spliter) - 1])
+        if antepenultima == words[0]:
+            antepenultima = antepenultima.replace(words[0], "")
+            lastword = lastword.replace(words[1], "")
+        text = spliter[:index - 2]
+        textappend = ""
+        for word in text:
+            textappend = textappend + " " + str(word)
+        textappend = textappend + " " + antepenultima + " " + lastword
+        textappend = str(textappend).strip()
+    else:
+        textappend = text
     return textappend
 
 
@@ -106,10 +132,6 @@ def processjson(jsoncontent):
     total = len(datas)
     print("Iniciando proceso de registro de catalogo: " + str(total))
     for element in datas:
-        if count is 0:
-            count = count + 1
-            continue
-
         id_existencia = str(element["ID EXISTENCIA"])
         descripcion = str(element["Unnamed: 1"])
 
@@ -121,6 +143,7 @@ def processjson(jsoncontent):
 
         # BUSCAR Y CORREGIR ESE PROBLEMA
         # 1302000013003748
+        # 1302000013003766
         item_presu = str(element["LOTE"])
         umedida = str(element["U. MEDIDA"])
         caducidad = str(element["CADUCIDAD"])
@@ -132,11 +155,12 @@ def processjson(jsoncontent):
             item_presu = caducidad
         re.sub("\s\s+", " ", descripcion)
         id_existencia = id_existencia if len(id_existencia) >= 16 else "0" + id_existencia
-        descripcion = replace_last_word(descripcion, "UNIDAD")
         dic_descripcion = extract_code_from_description(descripcion)
         if not dic_descripcion["code"] is None:
             item_presu = dic_descripcion["code"]
             descripcion = dic_descripcion["newtext"]
+        descripcion = replace_last_word(descripcion, "UNIDAD")
+        descripcion = replace_last_two_words(descripcion)
         current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
                                            item_presupuestario=item_presu)
         current_catalogo.save()
@@ -194,7 +218,8 @@ class Catalogo(graphene.Mutation):
         return Catalogo(success=success)
 
 
-def resetSql():
+def reset_sql_current_catalogo():
+    CurrentCatalogo.objects.all().delete()
     sequence_sql = connection.ops.sequence_reset_sql(no_style(), [CurrentCatalogo])
     with connection.cursor() as cursor:
         for sql in sequence_sql:
