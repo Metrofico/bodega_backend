@@ -4,6 +4,8 @@ from datetime import datetime
 
 import graphene
 from django.conf import settings
+from django.core.management.color import no_style
+from django.db import connection
 from graphene_file_upload.scalars import Upload
 
 from app_usbodega import filesutils
@@ -60,6 +62,44 @@ def replace_last_word(text, word):
     return textappend
 
 
+def extract_code_from_description(text):
+    spliter = str(text).split(" ")
+    index = len(spliter)  # empieza con 1
+    lastword = str(spliter[len(spliter) - 1])
+    lastword_extract_id = None
+    if "-" in lastword:
+        spliter_lastword = str(lastword).split("-")
+        code = spliter_lastword[1]
+        if len(code) is 6:
+            code0 = spliter_lastword[0]
+            count = 0
+            count_before = 0
+            for cha in code0:
+                try:
+                    int(cha)
+                    count = count + 1
+                except ValueError:
+                    pass
+            code0before = code0[1::2]
+            correct_word = code0[::2]
+            for cha_before in code0before:
+                try:
+                    int(cha_before)
+                    count_before = count_before + 1
+                except ValueError:
+                    pass
+            if count is 6 and count_before is 6:
+                lastword_extract_id = str(code0before) + "-" + str(code)
+                lastword = str(lastword).replace(str(lastword), str(correct_word))
+    text = spliter[:index - 1]
+    textappend = ""
+    for word in text:
+        textappend = textappend + " " + str(word)
+    textappend = textappend + " " + lastword
+    textappend = str(textappend).strip()
+    return {"code": lastword_extract_id, "newtext": textappend}
+
+
 def processjson(jsoncontent):
     datas = json.loads(jsoncontent)
     count = 0
@@ -93,6 +133,10 @@ def processjson(jsoncontent):
         re.sub("\s\s+", " ", descripcion)
         id_existencia = id_existencia if len(id_existencia) >= 16 else "0" + id_existencia
         descripcion = replace_last_word(descripcion, "UNIDAD")
+        dic_descripcion = extract_code_from_description(descripcion)
+        if not dic_descripcion["code"] is None:
+            item_presu = dic_descripcion["code"]
+            descripcion = dic_descripcion["newtext"]
         current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
                                            item_presupuestario=item_presu)
         current_catalogo.save()
@@ -148,3 +192,10 @@ class Catalogo(graphene.Mutation):
             print("Conversion completada!")
             success = True
         return Catalogo(success=success)
+
+
+def resetSql():
+    sequence_sql = connection.ops.sequence_reset_sql(no_style(), [CurrentCatalogo])
+    with connection.cursor() as cursor:
+        for sql in sequence_sql:
+            cursor.execute(sql)

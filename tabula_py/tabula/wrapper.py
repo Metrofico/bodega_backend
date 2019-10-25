@@ -36,15 +36,11 @@ def _jar_path():
 
 def _jar_patch_with_dependencies():
     # -classpath "$SERVICE:lib/*" net.md_5.bungee.Bootstrap
-    return DEFAULT_CONFIG["JAR_PATH"] + ":" + JAR_DIR + "/lib" + "/*";
+    return DEFAULT_CONFIG["JAR_PATH"] + ";" + JAR_DIR + "/lib" + "/*"
 
 
 def _jar_main_class():
     return JAR_MAIN_CLASS
-
-
-# Hacer un bucle infinito leyendo datos hasta que encuentre un formato correcto de obtener los datos
-# Cuando encuentre que encontro todos los datos correctamente simplemente parsear los datos de salida y finalizar con el bucle
 
 
 def run_command(command):
@@ -55,12 +51,12 @@ def run_command(command):
         if output == '' and process.poll() is not None:
             break
         if output:
-            INFO = str(output, "utf8");
-            if ("@[CSVWriterEND]" in INFO):
+            INFO = str(output, "utf8")
+            if "@[CSVWriterEND]" in INFO:
                 break;
-            if ("@[JSONWriterEND]" in INFO):
+            if "@[JSONWriterEND]" in INFO:
                 break;
-            if ("[PROGRESS]" in INFO):
+            if "[PROGRESS]" in INFO:
                 print("", INFO.replace("[PROGRESS]", "").strip())
             else:
                 output_all += str(output, "utf8")
@@ -88,12 +84,12 @@ def _run(java_options, options, path=None, encoding="utf-8"):
         )
 
     built_options = build_options(options)
-    args = ["java"] + java_options + ["--class-path", _jar_patch_with_dependencies(), _jar_main_class()] + built_options
+    args = ["java"] + java_options + ["-cp", _jar_patch_with_dependencies(), _jar_main_class()] + built_options
     if path:
         args.append(path)
 
     try:
-        comando = "";
+        comando = ""
         for flag in args:
             comando += flag + " "
 
