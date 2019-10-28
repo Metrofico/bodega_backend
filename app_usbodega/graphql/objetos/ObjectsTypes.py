@@ -26,3 +26,27 @@ class NotificacionType(graphene.ObjectType):
     title = graphene.String()
     date = graphene.String()
     content = graphene.String()
+
+
+class AreasType(graphene.ObjectType):
+    id = graphene.Int()
+    area = graphene.String()
+
+
+class CargosType(graphene.ObjectType):
+    id = graphene.Int()
+    cargo = graphene.String()
+
+
+class BeneficiarioType(graphene.ObjectType):
+    id = graphene.Int()
+    tipo_doc = graphene.String()
+    documento = graphene.String()
+    nombres = graphene.String()
+    apellido_paterno = graphene.String()
+    apellido_materno = graphene.String()
+    area = graphene.String()
+    cargo = graphene.String()
+    fecha_registro = graphene.String()
+    fecha_modificacion = graphene.String()
+    telefono = graphene.String()

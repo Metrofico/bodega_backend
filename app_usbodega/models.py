@@ -40,3 +40,27 @@ class CurrentCatalogo(models.Model):
     id_de_existencia = models.TextField(max_length=255)
     descripcion = models.TextField(max_length=255)
     item_presupuestario = models.TextField(max_length=255)
+
+
+class Areas(models.Model):
+    id = models.AutoField(primary_key=True)
+    area = models.TextField(max_length=100)
+
+
+class Cargos(models.Model):
+    id = models.AutoField(primary_key=True)
+    cargo = models.TextField(max_length=100)
+
+
+class Beneficiario(models.Model):
+    id = models.AutoField(primary_key=True)
+    tipo_doc = models.TextField(max_length=100)
+    documento = models.TextField(max_length=13)
+    nombres = models.TextField(max_length=100)
+    apellido_paterno = models.TextField(max_length=100)
+    apellido_materno = models.TextField(max_length=10)
+    area = models.ForeignKey(Areas, on_delete=models.CASCADE)
+    cargo = models.ForeignKey(Cargos, on_delete=models.CASCADE)
+    telefono = models.TextField(max_length=100)
+    fecha_registro = models.TextField(max_length=255)
+    fecha_modificacion = models.TextField(max_length=255)

@@ -11,7 +11,6 @@ from django.db import connection
 from graphene_file_upload.scalars import Upload
 
 from app_usbodega import filesutils, utils
-from app_usbodega.graphql import secure_graphql
 from app_usbodega.graphql.objetos.ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
 from app_usbodega.graphql.subscription.CatalogoSubscription import CatalogoSuscription
 from app_usbodega.graphql.subscription.NotificacionesSubscription import NotificacionesSubscription
@@ -50,7 +49,6 @@ class LastCatalogo(graphene.AbstractType):
         return CatalogoType(payload=csvcontent)
 
     def resolve_updatecurrentcatalogo(self, info, catalogo):
-        secure_graphql.validar_sesion(info.context)
         if Catalogos.objects.all().count() == 0:
             raise Exception("No hay datos para procesar en el catálogo")
         try:
@@ -239,9 +237,12 @@ class Catalogo(graphene.Mutation):
             # ESTA FUNCION LLAMA TAMBIEN AL CATALOGO SUBSCRIPTION PERSONAL
             # csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
             #                       java_options=["-Xms2G", "-Xmx3G", "-XX:MaxHeapSize=512m"], user_id=user_id)
-            csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
-                                  java_options=["-XX:MaxHeapSize=1G"], user_id=user_id)
-            csv.to_json(dbfiles_out_csv, orient="records", index=True)
+            tabula.convert_into(dbfiles_out_pdf, output_path="./data.json", output_format="json", encoding="utf-8",
+                                silent=True, pages='all',
+                                user_id=user_id)
+            # sv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
+            # java_options = ["-XX:MaxHeapSize=1G"], user_id = user_id)
+            # csv.to_json(dbfiles_out_csv, orient="records", index=True)
             # input_file = open(dbfiles_out_csv, "r")
             # csvcontent = input_file.read()
             # processjson(csvcontent)
@@ -252,7 +253,7 @@ class Catalogo(graphene.Mutation):
                                                                    "satisfactoriamente, "
                                                                    "ya puede reemplazarlo en el sistema actual")
             success = True
-        return Catalogo(success=success)
+            return Catalogo(success=success)
 
 
 def reset_sql_current_catalogo():
