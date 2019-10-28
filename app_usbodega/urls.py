@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
-from app_usbodega.CustomViews import SentryGraphQLView
+from app_usbodega.SentryGraphQLMiddleware import SentryGraphQLView
 
 urlpatterns = [
-    url(r'^gql', SentryGraphQLView.as_view(graphiql=False, batch=False))
+    url(r'^gql', SentryGraphQLView.as_view(graphiql=True, batch=False))
 ]

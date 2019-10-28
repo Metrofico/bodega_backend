@@ -22,17 +22,16 @@ INSTALLED_APPS = [
     'app_usbodega',
     'graphene_django',
     'corsheaders',
-    'tabula_py.tabula'
+    'tabula_py.tabula',
+    'channels'
 ]
-
-GRAPHENE = {
-    'SCHEMA': 'bodega_backend.schema.schema'
-}
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
-
+GRAPHENE = {
+    'SCHEMA': 'bodega_backend.schema.schema_querys'
+}
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -44,15 +43,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
 ]
+# EXCEPCIONES DE OPERACIONES GRAPHQL
+
+GRAPHQL_EXCEPT_QUERIES = [
+    'user',
+    'get_notifications',
+    'register',
+    'logout'
+]
 
 ROOT_URLCONF = 'bodega_backend.urls'
 
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000',
     'http://localhost:3000',
-    '192.168.10.15:3000',
-    '192.168.10.16:3000',
-    '127.0.0.1:3000'
+    'http://192.168.1.132:3000',
+    '192.168.1.132:3000',
+    '192.168.1.131:3000',
+    '127.0.0.1:3000',
+    '192.168.1.115:3000'
 )
 
 CORS_ALLOW_CREDENTIALS = True
@@ -82,9 +91,8 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'bodega_backend.wsgi.application'
-
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+ASGI_APPLICATION = "bodega_backend.urls.application"
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 

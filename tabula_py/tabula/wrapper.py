@@ -5,11 +5,14 @@ import os
 import platform
 import shlex
 import subprocess
+import time
 from logging import getLogger
 
 import numpy as np
 import pandas as pd
 
+from app_usbodega import utils
+from app_usbodega.graphql.subscription.ConvirtiendoCatalogoSubscription import ConvirtiendoCatalogoSubscription
 from .errors import CSVParseError, JavaNotFoundError
 from .file_util import localize_file
 from .template import load_template
@@ -43,27 +46,52 @@ def _jar_main_class():
     return JAR_MAIN_CLASS
 
 
-def run_command(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=False)
+def run_command(args, user_id):
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, shell=False)
     output_all = ""
+    start = time.time()
+    count = 0
+    total_data = 0
+    controler_interval = 100
+    controler_count = 0
+    elapsed = -1
     while True:
         output = process.stdout.readline()
         if output == '' and process.poll() is not None:
             break
         if output:
             INFO = str(output, "utf8")
+            if "Error occurred during initialization of VM" in INFO:
+                raise Exception("Error de memoria virtual, contacte con el administrador de sistema")
             if "@[CSVWriterEND]" in INFO:
-                break;
+                break
             if "@[JSONWriterEND]" in INFO:
-                break;
+                break
             if "[PROGRESS]" in INFO:
-                print("", INFO.replace("[PROGRESS]", "").strip())
+                spliter = INFO.replace("[PROGRESS]", "").strip().split("/")
+                total = spliter[1]
+                if count == 0:
+                    total_data = int(total)
+                if controler_count == 2:
+                    controler_count = 0
+                    end = time.time()
+                    elapsed = end - start
+                # ConvirtiendoCatalogoSubscription.uploading_catalogo_status(args[1], "", "")
+                if controler_count == 1:
+                    if elapsed != -1:
+                        remaing_timing = (((total_data - count) * elapsed) / count)
+                        ConvirtiendoCatalogoSubscription.uploading_catalogo_status(user_id, count, total,
+                                                                                   utils.segundos_a_formato(
+                                                                                       remaing_timing),
+                                                                                   "running")
+                count = count + 1
+                controler_count = controler_count + 1
             else:
                 output_all += str(output, "utf8")
     return str(output_all).encode("utf-8")
 
 
-def _run(java_options, options, path=None, encoding="utf-8"):
+def _run(java_options, options, path=None, encoding="utf-8", user_id=None):
     """Call tabula-java with the given lists of Java options and tabula_py
     options, as well as an optional path to pass to tabula-java as a regular
     argument and an optional encoding to use for any required output sent to
@@ -94,9 +122,17 @@ def _run(java_options, options, path=None, encoding="utf-8"):
             comando += flag + " "
 
         print("Argumento " + str(comando))
-        output = run_command(args)
+        print("Usuario: ", user_id)
+        output = run_command(args, user_id)
+        # with ProcessPool() as pool:
+        #     output = pool.schedule(run_command, args=[args, user_id])
+        #     # if running, the container process will be terminated
+        #     # a new process will be started consuming the next task
+        #     if output.running():
+        #         output.cancel()
+        #     resultado = output.result()
         # output = subprocess.check_output(args)
-        return output
+        return resultado
     except FileNotFoundError:
         raise JavaNotFoundError(JAVA_NOT_FOUND_ERROR)
     except subprocess.CalledProcessError as e:
@@ -112,6 +148,7 @@ def read_pdf(
         pandas_options=None,
         multiple_tables=False,
         user_agent=None,
+        user_id=None,
         **kwargs
 ):
     if output_format == "dataframe":
@@ -149,7 +186,7 @@ def read_pdf(
         )
 
     try:
-        output = _run(java_options, kwargs, path, encoding)
+        output = _run(java_options, kwargs, path, encoding, user_id)
     finally:
         if temporary:
             os.unlink(path)

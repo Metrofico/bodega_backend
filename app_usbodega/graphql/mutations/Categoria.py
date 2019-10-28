@@ -2,8 +2,8 @@ import graphene
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 
-from app_usbodega.Inputs import InputAddCategorias
-from .models import Categoria as CategoriaModel
+from app_usbodega.graphql.Inputs import InputAddCategorias
+from app_usbodega.models import Categoria as CategoriaModel
 
 
 class Categoria(graphene.Mutation):

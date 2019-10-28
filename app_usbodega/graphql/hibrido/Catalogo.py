@@ -1,5 +1,7 @@
 import json
+import math
 import re
+import time
 from datetime import datetime
 
 import graphene
@@ -8,19 +10,33 @@ from django.core.management.color import no_style
 from django.db import connection
 from graphene_file_upload.scalars import Upload
 
-from app_usbodega import filesutils
+from app_usbodega import filesutils, utils
+from app_usbodega.graphql import secure_graphql
+from app_usbodega.graphql.objetos.ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
+from app_usbodega.graphql.subscription.CatalogoSubscription import CatalogoSuscription
+from app_usbodega.graphql.subscription.NotificacionesSubscription import NotificacionesSubscription
+from app_usbodega.graphql.subscription.PersonalNotificacionesSubscription import PersonalNotificacionesSubscription
+from app_usbodega.models import Catalogos, CurrentCatalogo
 from tabula_py import tabula
-from .ObjectsTypes import CatalogoType, CatalogoUpdateCurrent, CatalogoClearCurrent
-from .models import Catalogos, CurrentCatalogo
 
 ID_DE_EXISTENCIA = "ID EXISTENCIA"
 DESCRIPCION = "DESCRIPCION"
 
 
+def redondear(n):
+    if n == 0:
+        return 0
+    sgn = -1 if n < 0 else 1
+    scale = int(-math.floor(math.log10(abs(n))))
+    if scale <= 0:
+        scale = 1
+    factor = 10 ** scale
+    return sgn * math.floor(abs(n) * factor) / factor
+
+
 class LastCatalogo(graphene.AbstractType):
     lastcatalogo = graphene.Field(CatalogoType)
     updatecurrentcatalogo = graphene.Field(CatalogoUpdateCurrent, catalogo=graphene.String(required=True))
-    clearcurrentcatalogo = graphene.Field(CatalogoUpdateCurrent)
 
     def resolve_lastcatalogo(self, info):
         if Catalogos.objects.all().count() == 0:
@@ -33,17 +49,14 @@ class LastCatalogo(graphene.AbstractType):
         csvcontent = input_file.read()
         return CatalogoType(payload=csvcontent)
 
-    def resolve_clearcurrentcatalogo(self, info):
-        reset_sql_current_catalogo()
-        return CatalogoClearCurrent(success="ok")
-
     def resolve_updatecurrentcatalogo(self, info, catalogo):
+        secure_graphql.validar_sesion(info.context)
         if Catalogos.objects.all().count() == 0:
-            raise Exception("No hay datos para importar")
+            raise Exception("No hay datos para procesar en el catálogo")
         try:
             catalogo_object = Catalogos.objects.get(nameFile=catalogo + ".pdf")
         except Exception:
-            raise Exception("No existe un catalogo con ese nombre")
+            raise Exception("No existe un catálogo con ese nombre")
         csvpath = catalogo_object.file
         csvpath = csvpath.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
         csvpath = csvpath.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
@@ -51,7 +64,8 @@ class LastCatalogo(graphene.AbstractType):
         input_file = open("." + csvpath, "r")
         csvcontent = input_file.read()
         processjson(csvcontent)
-        return CatalogoUpdateCurrent(success=csvcontent)
+        return CatalogoUpdateCurrent(
+            success="El cátalogo ha sido procesado correctamente, ya esta disponible para mostrarse")
 
 
 def replace_last_word(text, word):
@@ -127,23 +141,24 @@ def extract_code_from_description(text):
 
 
 def processjson(jsoncontent):
+    CatalogoSuscription.catalogo_status(0, 0, 0, "CARGANDO DATOS DE CATÁLOGO")
+    reset_sql_current_catalogo()
     datas = json.loads(jsoncontent)
+    CatalogoSuscription.catalogo_status(0, 0, 0, "CÁLCULANDO TIEMPO RESTANTE")
+    start = time.time()
     count = 0
     total = len(datas)
-    print("Iniciando proceso de registro de catalogo: " + str(total))
+    controler_interval = 100
+    controler_count = 0
+    elapsed = -1
+    NotificacionesSubscription.enviar_notificacion("warning", "Sé ha empezado a reemplazar el cátalogo actual")
     for element in datas:
+        if controler_count == controler_interval:
+            controler_count = 0
+            end = time.time()
+            elapsed = end - start
         id_existencia = str(element["ID EXISTENCIA"])
         descripcion = str(element["Unnamed: 1"])
-
-        # 2901000029000176
-        # 1302000013001109
-        # 902000009000032
-        # 1801000018001623
-        # 1801000018001405
-
-        # BUSCAR Y CORREGIR ESE PROBLEMA
-        # 1302000013003748
-        # 1302000013003766
         item_presu = str(element["LOTE"])
         umedida = str(element["U. MEDIDA"])
         caducidad = str(element["CADUCIDAD"])
@@ -164,9 +179,14 @@ def processjson(jsoncontent):
         current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
                                            item_presupuestario=item_presu)
         current_catalogo.save()
-        print("Procesando elemento de catalogo " + str(count) + "/" + str(total))
+        if controler_count == 20:
+            if elapsed != -1:
+                remaing_timing = (((total - count) * elapsed) / count)
+                CatalogoSuscription.catalogo_status(count, total, utils.segundos_a_formato(remaing_timing), "running")
         count = count + 1
-
+        controler_count = controler_count + 1
+    CatalogoSuscription.catalogo_status(0, 0, 0, "")
+    NotificacionesSubscription.enviar_notificacion("success", "Se ha actualizado el cátalogo")
     print("Cátalogo ha sido procesado correctamente")
     pass
 
@@ -179,6 +199,8 @@ class Catalogo(graphene.Mutation):
 
     def mutate(self, info, file=None):
         success = False
+        auth_user = getattr(info.context, "auth", None)
+        user_id = auth_user.get("id")
         if file is not None:
             name = file.name
             namesplit = str(name).split(".")
@@ -195,6 +217,9 @@ class Catalogo(graphene.Mutation):
             date = datetime.timestamp(now)
             namepdf = name + str(date) + ".pdf"
             namejson = name + str(date) + ".json"
+            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "success",
+                                                                   "El archivo fue subido con éxito")
+
             print("Nombre de archivo: ", namepdf)
             print("Iniciando conversion a json!: ", namejson)
             filesutils.allowextension(ext, "pdf")
@@ -205,15 +230,27 @@ class Catalogo(graphene.Mutation):
             out_file = open(dbfiles_out_pdf, "wb")  # archivo [w]rite(escribir) como [b]inary(binario)
             out_file.write(bytess)
             out_file.close()
+            # EMPEZANDO CONVERSIÓN
+            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "warning",
+                                                                   "El catálogo que se subio se está convirtiendo a "
+                                                                   "un formato "
+                                                                   "válido para el sistema por favor espere")
+            # AQUI SE LEE LA LECTURA DEL PDF
+            # ESTA FUNCION LLAMA TAMBIEN AL CATALOGO SUBSCRIPTION PERSONAL
+            # csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
+            #                       java_options=["-Xms2G", "-Xmx3G", "-XX:MaxHeapSize=512m"], user_id=user_id)
             csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
-                                  java_options=["-Xms3000M", "-Xmx3024M"])
+                                  java_options=["-XX:MaxHeapSize=1G"], user_id=user_id)
             csv.to_json(dbfiles_out_csv, orient="records", index=True)
             # input_file = open(dbfiles_out_csv, "r")
             # csvcontent = input_file.read()
             # processjson(csvcontent)
             catalogo = Catalogos(nameFile=namepdf, file=dbfiles_out_replazable[1:], date_uploaded=date)
             catalogo.save()
-            print("Conversion completada!")
+            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "success",
+                                                                   "El catálogo se ha terminado de convertir "
+                                                                   "satisfactoriamente, "
+                                                                   "ya puede reemplazarlo en el sistema actual")
             success = True
         return Catalogo(success=success)
 

@@ -1,10 +1,20 @@
 # from django.contrib import admin
+import channels
 from django.conf.urls import url
 from django.urls import include
-from graphene_django.views import GraphQLView
+
+from .schema import MyGraphqlWsConsumer
 
 urlpatterns = [
     url('api/', include('app_usbodega.urls')),
-    url(r'^graphiql', GraphQLView.as_view(batch=False, graphiql=True)),
-    #    path('admin/', admin.site.urls),
 ]
+
+websocket_urlpatterns = [
+    url(r'^graphql', MyGraphqlWsConsumer),
+]
+
+application = channels.routing.ProtocolTypeRouter(
+    {
+        "websocket": channels.routing.URLRouter(websocket_urlpatterns)
+    }
+)

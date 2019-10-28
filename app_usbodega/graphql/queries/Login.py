@@ -6,9 +6,9 @@ import jwt
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
+from app_usbodega.graphql import Inputs
+from app_usbodega.graphql.objetos import ObjectsTypes
 from app_usbodega.models import *
-from . import Inputs
-from . import ObjectsTypes
 
 
 def logindecode(token):
@@ -61,10 +61,10 @@ class Login(graphene.AbstractType):
                     return ObjectsTypes.UsuarioType(nombres=usuario.nombres, usuario=usuario.usuario,
                                                     apellidos=usuario.apellidos,
                                                     email=usuario.email, token=token)
-                except:
+                except (ValueError, Exception):
                     pass
         if not login.username.strip() and not login.password.strip():
-            print("Finded username and password empty no allowed")
+            print("Se encontró inicio de sesion por token")
             return None
         try:
             usuario = Usuarios.objects.get(usuario=login.username)

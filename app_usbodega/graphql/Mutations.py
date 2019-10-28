@@ -1,8 +1,8 @@
 import graphene
 
-from app_usbodega.Catalogo import Catalogo
-from .Categoria import Categoria
-from .Register import Register, Logout, AddProducto
+from app_usbodega.graphql.hibrido.Catalogo import Catalogo
+from app_usbodega.graphql.mutations.Categoria import Categoria
+from app_usbodega.graphql.mutations.Register import Register, Logout, AddProducto
 
 
 class Mutation(graphene.ObjectType):

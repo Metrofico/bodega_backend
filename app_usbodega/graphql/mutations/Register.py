@@ -6,9 +6,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 
 from app_usbodega import filters
-from . import Inputs
-from .ObjectsTypes import UsuarioType
-from .models import Usuarios
+from app_usbodega.graphql import Inputs
+from app_usbodega.graphql.objetos.ObjectsTypes import UsuarioType
+from app_usbodega.models import Usuarios
 
 
 def cleanstr(i):
