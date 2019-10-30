@@ -10,6 +10,8 @@ from django.core.management.color import no_style
 from django.db import connection
 from graphene_file_upload.scalars import Upload
 
+import manage
+from app_usbodega.sockets import tcpclient
 from app_usbodega import filesutils, utils
 from app_usbodega.graphql.objetos.ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
 from app_usbodega.graphql.subscription.CatalogoSubscription import CatalogoSuscription
@@ -20,6 +22,7 @@ from tabula_py import tabula
 
 ID_DE_EXISTENCIA = "ID EXISTENCIA"
 DESCRIPCION = "DESCRIPCION"
+TABULA_SERVER = False
 
 
 def redondear(n):
@@ -189,6 +192,16 @@ def processjson(jsoncontent):
     pass
 
 
+def tarea_completada_de_conversion(success, user_id):
+    global TABULA_SERVER
+    TABULA_SERVER = False
+    if success:
+        print("La tarea terminó")
+    else:
+        print("La taréa no terminó con exito")
+    pass
+
+
 class Catalogo(graphene.Mutation):
     class Arguments:
         file = Upload()
@@ -196,7 +209,10 @@ class Catalogo(graphene.Mutation):
     success = graphene.Boolean()
 
     def mutate(self, info, file=None):
-        success = False
+        global TABULA_SERVER
+        if TABULA_SERVER:
+            raise Exception("Hay un cátalogo en proceso de conversión, por favor espere")
+        TABULA_SERVER = True
         auth_user = getattr(info.context, "auth", None)
         user_id = auth_user.get("id")
         if file is not None:
@@ -210,48 +226,35 @@ class Catalogo(graphene.Mutation):
                 name = name
             else:
                 name = namesplit[0]
-
             now = datetime.now()
             date = datetime.timestamp(now)
             namepdf = name + str(date) + ".pdf"
             namejson = name + str(date) + ".json"
-            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "success",
-                                                                   "El archivo fue subido con éxito")
-
             print("Nombre de archivo: ", namepdf)
+            extensionallow = filesutils.allowextension(ext, "pdf")
+            if not (extensionallow is None):
+                TABULA_SERVER = False
+                raise Exception(extensionallow)
             print("Iniciando conversion a json!: ", namejson)
-            filesutils.allowextension(ext, "pdf")
-            dbfiles_out_csv = "./" + settings.DB_FILES_STATIC + "/" + settings.BODEGA_FOLDER + "/" + namejson
+            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "success",
+                                                                   "El archivo fue subido con éxito, y se está "
+                                                                   "procesando su solicitud de conversión por favor "
+                                                                   "espere")
+            dbfiles_out_converted = "./" + settings.DB_FILES_STATIC + "/" + settings.BODEGA_FOLDER + "/" + namejson
             dbfiles_out_pdf = "./" + settings.DB_FILES_STATIC + "/" + settings.BODEGA_FOLDER + "/" + namepdf
             dbfiles_out_replazable = "./" + "{DB_FILES_STATIC}" + "/{BODEGA_FOLDER}/" + namejson
             bytess = file.read()
             out_file = open(dbfiles_out_pdf, "wb")  # archivo [w]rite(escribir) como [b]inary(binario)
             out_file.write(bytess)
             out_file.close()
-            # EMPEZANDO CONVERSIÓN
-            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "warning",
-                                                                   "El catálogo que se subio se está convirtiendo a "
-                                                                   "un formato "
-                                                                   "válido para el sistema por favor espere")
-            # AQUI SE LEE LA LECTURA DEL PDF
-            # ESTA FUNCION LLAMA TAMBIEN AL CATALOGO SUBSCRIPTION PERSONAL
-            # csv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
-            #                       java_options=["-Xms2G", "-Xmx3G", "-XX:MaxHeapSize=512m"], user_id=user_id)
-            tabula.convert_into(dbfiles_out_pdf, output_path="./data.json", output_format="json", encoding="utf-8",
-                                silent=True, pages='all',
-                                user_id=user_id)
-            # sv = tabula.read_pdf(dbfiles_out_pdf, encoding="utf-8", silent=True, pages='all',
-            # java_options = ["-XX:MaxHeapSize=1G"], user_id = user_id)
-            # csv.to_json(dbfiles_out_csv, orient="records", index=True)
-            # input_file = open(dbfiles_out_csv, "r")
-            # csvcontent = input_file.read()
-            # processjson(csvcontent)
-            catalogo = Catalogos(nameFile=namepdf, file=dbfiles_out_replazable[1:], date_uploaded=date)
-            catalogo.save()
-            PersonalNotificacionesSubscription.enviar_notificacion(user_id, "success",
-                                                                   "El catálogo se ha terminado de convertir "
-                                                                   "satisfactoriamente, "
-                                                                   "ya puede reemplazarlo en el sistema actual")
+
+            leer_archivo_ruta = manage.db_bodega_file_path(namepdf)
+            archivo_salida = manage.db_bodega_file_path(namejson)
+            initial_convertion = f"-convert --pages all --guess --format JSON --outfile {archivo_salida} --silent " \
+                                 f"{leer_archivo_ruta}\n"
+            tcpclient.ClientTCP(settings.TABULA_SERVER_HOST, settings.TABULA_SERVER_PORT,
+                                initial_convertion, user_id, namepdf, dbfiles_out_replazable, date,
+                                callback=tarea_completada_de_conversion).start()
             success = True
             return Catalogo(success=success)
 

@@ -32,5 +32,6 @@ class ConvirtiendoCatalogoSubscription(channels_graphql_ws.Subscription):
     def uploading_catalogo_status(cls, user_id, done, total, remaining_time, message):
         cls.broadcast(
             group=user_id,
-            payload={"done": done, "total": total, "remaining_time": remaining_time, "message": message},
+            payload={"done": str(done), "total": str(total), "remaining_time": str(remaining_time),
+                     "message": str(message)},
         )

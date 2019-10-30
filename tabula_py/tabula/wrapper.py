@@ -76,7 +76,6 @@ def run_command(args, user_id):
                     controler_count = 0
                     end = time.time()
                     elapsed = end - start
-                # ConvirtiendoCatalogoSubscription.uploading_catalogo_status(args[1], "", "")
                 if controler_count == 1:
                     if elapsed != -1:
                         remaing_timing = (((total_data - count) * elapsed) / count)
