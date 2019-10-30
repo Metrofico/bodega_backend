@@ -83,6 +83,9 @@ class ClientTCP(Thread):
                                                                    "El catálogo se ha terminado de convertir "
                                                                    "satisfactoriamente, "
                                                                    "ya puede reemplazarlo en el sistema actual")
+            ConvirtiendoCatalogoSubscription.uploading_catalogo_status(self.user_id, 0, 0,
+                                                                       "",
+                                                                       "")
             self.connected = False
             return
         spliter = text.strip().split("/")

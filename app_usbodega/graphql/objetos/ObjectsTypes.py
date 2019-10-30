@@ -13,6 +13,12 @@ class CatalogoType(graphene.ObjectType):
     payload = graphene.String()
 
 
+class CatalogoList(graphene.ObjectType):
+    id = graphene.String()
+    nombre = graphene.String()
+    subida = graphene.String()
+
+
 class CatalogoUpdateCurrent(graphene.ObjectType):
     success = graphene.String()
 

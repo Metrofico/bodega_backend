@@ -18,7 +18,7 @@ def logindecode(token):
             if 'id' in user:
                 if is_valid_uuid(user.get("id")):
                     return user
-        except:
+        except (ValueError, Exception):
             return {}
     return {}
 

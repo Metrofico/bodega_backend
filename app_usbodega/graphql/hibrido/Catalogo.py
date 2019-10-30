@@ -55,15 +55,24 @@ class LastCatalogo(graphene.AbstractType):
         if Catalogos.objects.all().count() == 0:
             raise Exception("No hay datos para procesar en el catálogo")
         try:
-            catalogo_object = Catalogos.objects.get(nameFile=catalogo + ".pdf")
+            catalogo_object = Catalogos.objects.get(id=catalogo)
         except Exception:
             raise Exception("No existe un catálogo con ese nombre")
         csvpath = catalogo_object.file
         csvpath = csvpath.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
         csvpath = csvpath.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
         print(csvpath)
-        input_file = open("." + csvpath, "r")
-        csvcontent = input_file.read()
+        input_file = open(csvpath, "r")
+        try:
+            csvcontent = input_file.read()
+        except (ValueError, ValueError) as e:
+            print(e)
+            NotificacionesSubscription.enviar_notificacion("error",
+                                                           "El catálogo que subio no tiene un formato correcto (id de "
+                                                           "existencia, descripción, etc)")
+            return CatalogoUpdateCurrent(
+                success="El cátalogo que intentó procesar no es compatible")
+            pass
         processjson(csvcontent)
         return CatalogoUpdateCurrent(
             success="El cátalogo ha sido procesado correctamente, ya esta disponible para mostrarse")
@@ -152,43 +161,54 @@ def processjson(jsoncontent):
     controler_interval = 100
     controler_count = 0
     elapsed = -1
-    NotificacionesSubscription.enviar_notificacion("warning", "Sé ha empezado a reemplazar el cátalogo actual")
+    NotificacionesSubscription.enviar_notificacion("warning", "Sé está comprobando la estructura del catálogo para "
+                                                              "procesarlo")
+    error = False
     for element in datas:
         if controler_count == controler_interval:
             controler_count = 0
             end = time.time()
             elapsed = end - start
-        id_existencia = str(element["ID EXISTENCIA"])
-        descripcion = str(element["Unnamed: 1"])
-        item_presu = str(element["LOTE"])
-        umedida = str(element["U. MEDIDA"])
-        caducidad = str(element["CADUCIDAD"])
-        if item_presu is "N":
-            item_presu = str(element["ITEM PRESUPUESTARIO"])
-        if "-" in umedida:
-            item_presu = str(umedida)
-        if "-" in caducidad:
-            item_presu = caducidad
-        re.sub("\s\s+", " ", descripcion)
-        id_existencia = id_existencia if len(id_existencia) >= 16 else "0" + id_existencia
-        dic_descripcion = extract_code_from_description(descripcion)
-        if not dic_descripcion["code"] is None:
-            item_presu = dic_descripcion["code"]
-            descripcion = dic_descripcion["newtext"]
-        descripcion = replace_last_word(descripcion, "UNIDAD")
-        descripcion = replace_last_two_words(descripcion)
-        current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
-                                           item_presupuestario=item_presu)
-        current_catalogo.save()
-        if controler_count == 20:
-            if elapsed != -1:
-                remaing_timing = (((total - count) * elapsed) / count)
-                CatalogoSuscription.catalogo_status(count, total, utils.segundos_a_formato(remaing_timing), "running")
-        count = count + 1
-        controler_count = controler_count + 1
-    CatalogoSuscription.catalogo_status(0, 0, 0, "")
-    NotificacionesSubscription.enviar_notificacion("success", "Se ha actualizado el cátalogo")
-    print("Cátalogo ha sido procesado correctamente")
+        try:
+            id_existencia = str(element["ID EXISTENCIA"])
+            descripcion = str(element["Unnamed: 1"])
+            item_presu = str(element["LOTE"])
+            umedida = str(element["U. MEDIDA"])
+            caducidad = str(element["CADUCIDAD"])
+            if item_presu is "N":
+                item_presu = str(element["ITEM PRESUPUESTARIO"])
+            if "-" in umedida:
+                item_presu = str(umedida)
+            if "-" in caducidad:
+                item_presu = caducidad
+            re.sub("\s\s+", " ", descripcion)
+            id_existencia = id_existencia if len(id_existencia) >= 16 else "0" + id_existencia
+            dic_descripcion = extract_code_from_description(descripcion)
+            if not dic_descripcion["code"] is None:
+                item_presu = dic_descripcion["code"]
+                descripcion = dic_descripcion["newtext"]
+            descripcion = replace_last_word(descripcion, "UNIDAD")
+            descripcion = replace_last_two_words(descripcion)
+            current_catalogo = CurrentCatalogo(id_de_existencia=id_existencia, descripcion=descripcion,
+                                               item_presupuestario=item_presu)
+            current_catalogo.save()
+            if controler_count == 20:
+                if elapsed != -1:
+                    remaing_timing = (((total - count) * elapsed) / count)
+                    CatalogoSuscription.catalogo_status(count, total, utils.segundos_a_formato(remaing_timing),
+                                                        "running")
+            count = count + 1
+            controler_count = controler_count + 1
+        except (ValueError, Exception):
+            NotificacionesSubscription.enviar_notificacion("error",
+                                                           "El catálogo que subio no tiene un formato correcto (id de "
+                                                           "existencia, descripción, etc)")
+            error = True
+            break
+    if not error:
+        CatalogoSuscription.catalogo_status(0, 0, 0, "")
+        NotificacionesSubscription.enviar_notificacion("success", "Se ha actualizado el cátalogo")
+        print("Cátalogo ha sido procesado correctamente")
     pass
 
 
@@ -228,8 +248,8 @@ class Catalogo(graphene.Mutation):
                 name = namesplit[0]
             now = datetime.now()
             date = datetime.timestamp(now)
-            namepdf = name + str(date) + ".pdf"
-            namejson = name + str(date) + ".json"
+            namepdf = name + "-" + str(date) + ".pdf"
+            namejson = name + "-" + str(date) + ".json"
             print("Nombre de archivo: ", namepdf)
             extensionallow = filesutils.allowextension(ext, "pdf")
             if not (extensionallow is None):
