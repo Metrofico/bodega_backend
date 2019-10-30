@@ -16,6 +16,7 @@ class CatalogoType(graphene.ObjectType):
 class CatalogoList(graphene.ObjectType):
     id = graphene.String()
     nombre = graphene.String()
+    file = graphene.String()
     subida = graphene.String()
 
 

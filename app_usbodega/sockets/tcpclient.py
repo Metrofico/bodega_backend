@@ -68,7 +68,7 @@ class ClientTCP(Thread):
         text = line.rstrip().decode("utf-8").replace("[PROGRESS]", "")
         # print("Linea recibida: {}".format(line.rstrip()))
         # print(text)
-        if text == "@[JSONWriterEND]":
+        if text == "@[JSONWriterEND]" or text == "@[CSVWriterEND]":
             self.processing = False
             ConvirtiendoCatalogoSubscription.uploading_catalogo_status(self.user_id, 0, 0,
                                                                        "",
@@ -78,7 +78,7 @@ class ClientTCP(Thread):
                                  date_uploaded=self.uploaded_date)
             catalogo.save()
             if not (self.callback is None):
-                self.callback(True, self.user_id)
+                self.callback(True, self.user_id, self.dbfiles_out_replazable)
             PersonalNotificacionesSubscription.enviar_notificacion(self.user_id, "success",
                                                                    "El catálogo se ha terminado de convertir "
                                                                    "satisfactoriamente, "
@@ -118,7 +118,7 @@ class ClientTCP(Thread):
                                                                            "(intente nuevamente)")
                     print("Error producido por conexión: ", e)
                     time.sleep(1)
-                    self.callback(False)
+                    self.callback(False, self.user_id, self.dbfiles_out_replazable)
                     self.processing = False
                     self.connected = False
                 else:
@@ -156,7 +156,7 @@ class ClientTCP(Thread):
             return
         print("Error al conectar al servidor")
         if not (self.callback is None):
-            self.callback(False, self.user_id)
+            self.callback(False, self.user_id, self.dbfiles_out_replazable)
         self.processing = False
         PersonalNotificacionesSubscription.enviar_notificacion(self.user_id, "error",
                                                                "No se pudo convertir el archivo, el servidor se "

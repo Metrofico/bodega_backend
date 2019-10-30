@@ -15,6 +15,7 @@ class LocalCatalogo(graphene.AbstractType):
         for Catalogo in catalogos:
             catalogos_local.append(
                 CatalogoList(id=Catalogo.id,
+                             file=Catalogo.nameFile,
                              nombre=(Catalogo.nameFile.rstrip(".pdf")[:Catalogo.nameFile.rstrip(".pdf").rfind("-")]),
                              subida=str(Catalogo.date_uploaded)))
         # catalogos_local.append(CatalogoList(nombre=""))

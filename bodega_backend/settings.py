@@ -96,6 +96,7 @@ TEMPLATES = [
     },
 ]
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+WSGI_APPLICATION = 'bodega_backend.wsgi.application'
 ASGI_APPLICATION = "bodega_backend.urls.application"
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

@@ -47,3 +47,42 @@ def segundos_a_formato(segundos):
         if int(minutos) >= 1 else str(
             segundos) + " " + f_segundos(segundos)
     )
+
+
+def get_cookies_from_header_str(headers):
+    cookies_get = {}
+    for h in headers:
+        if h == "Cookie":
+            value = headers["Cookie"]
+            cookies = value.split(";")
+            for cookie in cookies:
+                cookie = cookie.strip().split("=")
+                key = cookie[0]
+                value = cookie[1]
+                cookies_get[key] = value
+    return cookies_get
+
+
+def get_cookies_from_header(headers):
+    cookies_get = {}
+    for h in headers:
+        key = str(h[0], "utf8")
+        if key == "cookie":
+            cookies = str(h[1], "utf8").split(";")
+            for cookie in cookies:
+                cookie = cookie.strip().split("=")
+                key = cookie[0]
+                value = cookie[1]
+                cookies_get[key] = value
+    return cookies_get
+
+
+def get_cookies_from_line(line_cookies):
+    cookies_get = {}
+    cookies = line_cookies.split(";")
+    for cookie in cookies:
+        cookie = cookie.strip().split("=")
+        key = cookie[0]
+        value = cookie[1]
+        cookies_get[key] = value
+    return cookies_get

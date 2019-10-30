@@ -131,7 +131,7 @@ def _run(java_options, options, path=None, encoding="utf-8", user_id=None):
         #         output.cancel()
         #     resultado = output.result()
         # output = subprocess.check_output(args)
-        return resultado
+        return output
     except FileNotFoundError:
         raise JavaNotFoundError(JAVA_NOT_FOUND_ERROR)
     except subprocess.CalledProcessError as e:

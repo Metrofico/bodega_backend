@@ -1,3 +1,4 @@
+import io
 import json
 import math
 import re
@@ -5,10 +6,12 @@ import time
 from datetime import datetime
 
 import graphene
+import pandas as pd
 from django.conf import settings
 from django.core.management.color import no_style
 from django.db import connection
 from graphene_file_upload.scalars import Upload
+from pandas import DataFrame
 
 import manage
 from app_usbodega.sockets import tcpclient
@@ -62,11 +65,19 @@ class LastCatalogo(graphene.AbstractType):
         csvpath = csvpath.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
         csvpath = csvpath.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
         print(csvpath)
-        input_file = open(csvpath, "r")
+        try:
+            input_file = open(csvpath, "r")
+        except (ValueError, Exception):
+            NotificacionesSubscription.enviar_notificacion("error",
+                                                           "El catálogo no existe en la ruta de archivos "
+                                                           "(el archivo ha sido borrado directamente de sus "
+                                                           "directorios)")
+            return CatalogoUpdateCurrent(
+                success="El cátalogo que intentó procesar no existe en los directorios administrativos")
+
         try:
             csvcontent = input_file.read()
         except (ValueError, ValueError) as e:
-            print(e)
             NotificacionesSubscription.enviar_notificacion("error",
                                                            "El catálogo que subio no tiene un formato correcto (id de "
                                                            "existencia, descripción, etc)")
@@ -170,6 +181,9 @@ def processjson(jsoncontent):
             end = time.time()
             elapsed = end - start
         try:
+            if count == 2:
+                NotificacionesSubscription.enviar_notificacion("success",
+                                                               "El catálogo actual se ha empezado a remplazar")
             id_existencia = str(element["ID EXISTENCIA"])
             descripcion = str(element["Unnamed: 1"])
             item_presu = str(element["LOTE"])
@@ -212,11 +226,20 @@ def processjson(jsoncontent):
     pass
 
 
-def tarea_completada_de_conversion(success, user_id):
+def tarea_completada_de_conversion(success, user_id, dbfiles_out_replazable):
     global TABULA_SERVER
     TABULA_SERVER = False
     if success:
         print("La tarea terminó")
+        dbfiles_out_replazable = dbfiles_out_replazable.replace("{BODEGA_FOLDER}", settings.BODEGA_FOLDER)
+        dbfiles_out_replazable = dbfiles_out_replazable.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
+        input_file = open(dbfiles_out_replazable, "rb")
+        csvcontentbytes = input_file.read()
+        # df = DataFrame(eval(csvcontentbytes))
+        df = pd.read_csv(io.BytesIO(csvcontentbytes), encoding="utf-8")
+        print(df)
+        df.to_json(f"{dbfiles_out_replazable}", orient='records')
+        print("Archivo exportado")
     else:
         print("La taréa no terminó con exito")
     pass
@@ -270,7 +293,7 @@ class Catalogo(graphene.Mutation):
 
             leer_archivo_ruta = manage.db_bodega_file_path(namepdf)
             archivo_salida = manage.db_bodega_file_path(namejson)
-            initial_convertion = f"-convert --pages all --guess --format JSON --outfile {archivo_salida} --silent " \
+            initial_convertion = f"-convert --pages all --guess --outfile {archivo_salida} --silent " \
                                  f"{leer_archivo_ruta}\n"
             tcpclient.ClientTCP(settings.TABULA_SERVER_HOST, settings.TABULA_SERVER_PORT,
                                 initial_convertion, user_id, namepdf, dbfiles_out_replazable, date,
