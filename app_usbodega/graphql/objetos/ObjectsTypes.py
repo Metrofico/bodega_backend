@@ -57,3 +57,9 @@ class BeneficiarioType(graphene.ObjectType):
     fecha_registro = graphene.String()
     fecha_modificacion = graphene.String()
     telefono = graphene.String()
+
+
+class CurrentCatalogoObj(graphene.ObjectType):
+    id_existencia = graphene.String()
+    descripcion = graphene.String()
+    item_presupuestario = graphene.String()

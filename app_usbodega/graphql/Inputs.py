@@ -87,3 +87,5 @@ class InputUpdateCargo(graphene.InputObjectType):
 
 class InputDeleteCargo(graphene.InputObjectType):
     target = graphene.Int(required=True)
+
+

@@ -1,6 +1,5 @@
 import graphene
 from django.contrib.postgres.search import SearchVector
-
 from app_usbodega.graphql.Inputs import InputBeneficiarioQuery, InputRegisterBeneficiario, InputUpdateBeneficiario
 from app_usbodega.graphql.objetos.ObjectsTypes import BeneficiarioType
 from app_usbodega.utilidades.Date import Date

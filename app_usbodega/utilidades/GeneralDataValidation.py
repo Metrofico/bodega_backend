@@ -12,6 +12,11 @@ def strfilters(**kwargs):
         min_length(kwargs.get("str"), kwargs.get("min_length"), kwargs.get("errormessageminlength"))
 
 
+def check_empty(strtext):
+    if not str(strtext).strip():
+        raise Exception("La busqueda no debe estar vacia")
+
+
 def min_length(string, minlenght, errormessage):
     if not (len(string) >= minlenght):
         errormessage = str(errormessage).replace("$length", str(minlenght))
