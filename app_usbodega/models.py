@@ -64,3 +64,11 @@ class Beneficiario(models.Model):
     telefono = models.TextField(max_length=100)
     fecha_registro = models.TextField(max_length=255)
     fecha_modificacion = models.TextField(max_length=255)
+
+
+class Articulo(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_de_existencia = models.TextField(max_length=255, unique=True)
+    descripcion = models.TextField(max_length=255)
+    item_presupuestario = models.TextField(max_length=255)
+    id_categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)

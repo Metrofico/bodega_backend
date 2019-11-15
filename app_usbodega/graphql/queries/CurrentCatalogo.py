@@ -1,8 +1,8 @@
 import graphene
 from django.contrib.postgres.search import SearchVector
-from ...utilidades.GeneralDataValidation import has_value, min_length, check_empty
-from ..objetos.ObjectsTypes import CurrentCatalogoObj
-from ...models import CurrentCatalogo
+from app_usbodega.utilidades.GeneralDataValidation import has_value, min_length, check_empty
+from app_usbodega.graphql.objetos.ObjectsTypes import CurrentCatalogoObj
+from app_usbodega.models import CurrentCatalogo
 
 
 class CurrentCatalogoQueries(graphene.ObjectType):
@@ -18,6 +18,7 @@ class CurrentCatalogoQueries(graphene.ObjectType):
 
         for item in db_awnser:
             item_presupuestario = "" if item.item_presupuestario == "None" else item.item_presupuestario
-            to_return.append(CurrentCatalogoObj(id_existencia=item.id_de_existencia, descripcion=item.descripcion,
-                                                item_presupuestario=item_presupuestario))
+            to_return.append(
+                CurrentCatalogoObj(id=item.id, id_existencia=item.id_de_existencia, descripcion=item.descripcion,
+                                   item_presupuestario=item_presupuestario))
         return to_return

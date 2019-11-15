@@ -1,9 +1,8 @@
-import os
 import socket
-from threading import Thread, Lock
 import time
 from io import BytesIO
-import _thread
+from threading import Thread, Lock
+
 from app_usbodega import utils
 from app_usbodega.graphql.subscription.ConvirtiendoCatalogoSubscription import ConvirtiendoCatalogoSubscription
 from app_usbodega.graphql.subscription.PersonalNotificacionesSubscription import PersonalNotificacionesSubscription

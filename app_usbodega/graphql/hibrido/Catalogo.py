@@ -11,17 +11,15 @@ from django.conf import settings
 from django.core.management.color import no_style
 from django.db import connection
 from graphene_file_upload.scalars import Upload
-from pandas import DataFrame
 
 import manage
-from app_usbodega.sockets import tcpclient
 from app_usbodega import filesutils, utils
 from app_usbodega.graphql.objetos.ObjectsTypes import CatalogoType, CatalogoUpdateCurrent
 from app_usbodega.graphql.subscription.CatalogoSubscription import CatalogoSuscription
 from app_usbodega.graphql.subscription.NotificacionesSubscription import NotificacionesSubscription
 from app_usbodega.graphql.subscription.PersonalNotificacionesSubscription import PersonalNotificacionesSubscription
 from app_usbodega.models import Catalogos, CurrentCatalogo
-from tabula_py import tabula
+from app_usbodega.sockets import tcpclient
 
 ID_DE_EXISTENCIA = "ID EXISTENCIA"
 DESCRIPCION = "DESCRIPCION"
@@ -235,7 +233,6 @@ def tarea_completada_de_conversion(success, user_id, dbfiles_out_replazable):
         dbfiles_out_replazable = dbfiles_out_replazable.replace("{DB_FILES_STATIC}", settings.DB_FILES_STATIC)
         input_file = open(dbfiles_out_replazable, "rb")
         csvcontentbytes = input_file.read()
-        # df = DataFrame(eval(csvcontentbytes))
         df = pd.read_csv(io.BytesIO(csvcontentbytes), encoding="utf-8")
         print(df)
         df.to_json(f"{dbfiles_out_replazable}", orient='records')

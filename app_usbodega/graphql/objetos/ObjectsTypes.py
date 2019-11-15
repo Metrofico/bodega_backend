@@ -1,4 +1,7 @@
 import graphene
+from graphene_django import DjangoObjectType
+
+from app_usbodega.models import Articulo
 
 
 class UsuarioType(graphene.ObjectType):
@@ -11,6 +14,12 @@ class UsuarioType(graphene.ObjectType):
 
 class CatalogoType(graphene.ObjectType):
     payload = graphene.String()
+
+
+class CategoriaModel(graphene.ObjectType):
+    id = graphene.String()
+    codigo = graphene.String()
+    descripcion = graphene.String()
 
 
 class CatalogoList(graphene.ObjectType):
@@ -60,6 +69,15 @@ class BeneficiarioType(graphene.ObjectType):
 
 
 class CurrentCatalogoObj(graphene.ObjectType):
+    id = graphene.String()
     id_existencia = graphene.String()
     descripcion = graphene.String()
     item_presupuestario = graphene.String()
+
+
+class ArticuloType(graphene.ObjectType):
+    id = graphene.String()
+    id_de_existencia = graphene.String()
+    descripcion = graphene.String()
+    item_presupuestario = graphene.String()
+    categoria = graphene.Field(CategoriaModel)
